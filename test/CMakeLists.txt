@@ -11,14 +11,17 @@ if(GTEST_FOUND)
   add_executable(message_serialization_test EXCLUDE_FROM_ALL message_serialization_test.cpp)
   target_link_libraries(message_serialization_test ${PROJECT_NAME} ${catkin_LIBRARIES} ${GTEST_LIBRARIES})
 
+  add_executable(message_value_test EXCLUDE_FROM_ALL message_value_test.cpp)
+  target_link_libraries(message_value_test ${PROJECT_NAME} ${catkin_LIBRARIES} ${GTEST_LIBRARIES})
+
   if(TARGET tests)
     add_dependencies(tests
       message_description_test
       message_serialization_test
+      message_value_test
       )
   endif()
 
 endif()
 
-add_rostest(message_description.test)
-add_rostest(message_serialization.test)
+add_rostest(all.test)

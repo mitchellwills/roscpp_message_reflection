@@ -77,7 +77,7 @@ DECLARE_STD_MSGS_DATA_MESSAGE_TESTS(Int32, int32_t, -234344309);
 DECLARE_STD_MSGS_DATA_MESSAGE_TESTS(UInt32, uint32_t, 24353435);
 DECLARE_STD_MSGS_DATA_MESSAGE_TESTS(Int64, int64_t, -1342242323);
 DECLARE_STD_MSGS_DATA_MESSAGE_TESTS(UInt64, uint64_t, 24342422342432);
-DECLARE_STD_MSGS_DATA_MESSAGE_TESTS(String, std::string, std::string("hello this is a test")); // TODO remove string cast on test data
+DECLARE_STD_MSGS_DATA_MESSAGE_TESTS(String, std::string, "hello this is a test");
 DECLARE_STD_MSGS_DATA_MESSAGE_TESTS(Time, ros::Time, ros::Time(100));
 DECLARE_STD_MSGS_DATA_MESSAGE_TESTS(Duration, ros::Duration, ros::Duration(50));
 

@@ -1,4 +1,0 @@
-<launch>
-  <node name="message_description_server" pkg="roscpp_message_reflection" type="message_description_server.py" output="screen"/>
-  <test test-name="message_serialization" pkg="roscpp_message_reflection" type="message_serialization_test" />
-</launch>
