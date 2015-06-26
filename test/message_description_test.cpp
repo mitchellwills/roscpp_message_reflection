@@ -3,6 +3,8 @@
 #include <boost/scoped_ptr.hpp>
 #include <roscpp_message_reflection/message_description_provider.h>
 
+using namespace roscpp_message_reflection;
+
 #define EXPECT_VALUE_FIELD(expected_name, expected_type, field)	\
   EXPECT_EQ(expected_name, field.name());			\
   EXPECT_EQ(expected_type, field.full_type());			\
@@ -31,9 +33,6 @@
   EXPECT_EQ(expected_value_type, field.value_type());			\
   EXPECT_EQ(FieldDescription::FixedLengthArray, field.type());		\
   EXPECT_EQ(expected_length, field.array_length())
-
-using namespace roscpp_message_reflection;
-
 
 TEST(MessageDescription, construct_value_field)
 {
