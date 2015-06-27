@@ -31,4 +31,4 @@ script:
   - catkin config --install
   - catkin build -p1
   - source install/setup.bash
-  - catkin lint src/package -W2
+  - catkin lint src/package -W2 --ignore link_directory

@@ -1,13 +1,13 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(roscpp_message_reflection)
 
-## Find catkin macros and libraries
-## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
-## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   roscpp_serialization
   topic_tools
   message_generation
+  cpp_common
+  rospy
+  roscpp
 )
 
 ## System dependencies are found with CMake's conventions
@@ -48,30 +48,20 @@ catkin_package(
 ## Build ##
 ###########
 
-## Specify additional locations of header files
-## Your package locations should be listed before other locations
 include_directories(include)
 include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-add_library(${PROJECT_NAME}
+add_library(roscpp_message_reflection
   src/message.cpp
   src/message_value.cpp
   src/message_description_provider.cpp
 )
-
-## Declare a cpp executable
-# add_executable(roscpp_message_reflection_node src/roscpp_message_reflection_node.cpp)
-
-## Add cmake target dependencies of the executable/library
-## as an example, message headers may need to be generated before nodes
-# add_dependencies(roscpp_message_reflection_node roscpp_message_reflection_generate_messages_cpp)
-
-## Specify libraries to link a library or executable target against
-# target_link_libraries(roscpp_message_reflection_node
-#   ${catkin_LIBRARIES}
-# )
+target_link_libraries(roscpp_message_reflection
+  ${catkin_LIBRARIES}
+)
+add_dependencies(roscpp_message_reflection roscpp_message_reflection_generate_messages_cpp)
 
 #############
 ## Install ##
@@ -80,26 +70,21 @@ add_library(${PROJECT_NAME}
 # all install targets should use catkin DESTINATION variables
 # See http://ros.org/doc/api/catkin/html/adv_user_guide/variables.html
 
-## Mark executable scripts (Python etc.) for installation
-## in contrast to setup.py, you can choose the destination
-# install(PROGRAMS
-#   scripts/my_python_script
-#   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-# )
+install(PROGRAMS
+  scripts/message_description_server.py
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
 
-## Mark executables and/or libraries for installation
-# install(TARGETS roscpp_message_reflection roscpp_message_reflection_node
-#   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-#   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-#   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-# )
+install(TARGETS roscpp_message_reflection
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
 
-## Mark cpp header files for installation
-# install(DIRECTORY include/${PROJECT_NAME}/
-#   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-#   FILES_MATCHING PATTERN "*.h"
-#   PATTERN ".svn" EXCLUDE
-# )
+install(DIRECTORY include/${PROJECT_NAME}/
+  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+  FILES_MATCHING PATTERN "*.h"
+)
 
 ## Mark other files for installation (e.g. launch and bag files, etc.)
 # install(FILES
@@ -113,7 +98,6 @@ add_library(${PROJECT_NAME}
 #############
 
 if(CATKIN_ENABLE_TESTING)
-  find_package(catkin REQUIRED rospy roscpp)
-  find_package(rostest)
+  find_package(rostest REQUIRED)
   add_subdirectory(test)
 endif()
