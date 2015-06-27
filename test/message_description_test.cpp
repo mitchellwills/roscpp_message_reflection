@@ -58,7 +58,7 @@ TEST(MessageDescription, construct_simple_message)
   fields.push_back(FieldDescription::CreateFromFullType("a", "int32"));
   fields.push_back(FieldDescription::CreateFromFullType("b", "uint16"));
   fields.push_back(FieldDescription::CreateFromFullType("d", "string"));
-  MessageDescription message("a_package/AMessage", "992ce8a1687cec8c8bd883ec73ca1234", "int32 a\nuint16 b\nstring d\n\n", fields);
+  MessageDescription message("a_package/AMessage", "992ce8a1687cec8c8bd883ec73ca1234", "int32 a\nuint16 b\nstring d\n\n", fields, std::map<std::string, MessageDescription::Ptr>());
   EXPECT_EQ("a_package/AMessage", message.name);
   EXPECT_EQ("992ce8a1687cec8c8bd883ec73ca1234", message.md5sum);
   EXPECT_EQ("int32 a\nuint16 b\nstring d\n\n", message.full_text);

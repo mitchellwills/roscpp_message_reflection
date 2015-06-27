@@ -79,18 +79,22 @@ private:
   array_length_t array_length_;
 };
 
+class MessageDescriptionProvider;
 struct MessageDescription {
   typedef boost::shared_ptr<MessageDescription> Ptr;
 
   MessageDescription(const std::string& name, const std::string& md5sum,
-		     const std::string& full_text, std::vector<FieldDescription> fields)
-    : name(name), md5sum(md5sum), full_text(full_text), fields(fields) {}
+		     const std::string& full_text, std::vector<FieldDescription> fields,
+		     std::map<std::string, MessageDescription::Ptr> child_messages)
+    : name(name), md5sum(md5sum), full_text(full_text), fields(fields), child_messages(child_messages) {}
 
   const std::string name;
   const std::string md5sum;
   const std::string full_text;
 
   const std::vector<FieldDescription> fields;
+
+  std::map<std::string, MessageDescription::Ptr> child_messages;
 };
 
 }

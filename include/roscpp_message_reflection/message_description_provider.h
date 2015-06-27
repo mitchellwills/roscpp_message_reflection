@@ -5,6 +5,7 @@
 #include <string>
 #include <roscpp_message_reflection/message_description.h>
 #include <ros/ros.h>
+#include <boost/shared_ptr.hpp>
 
 namespace roscpp_message_reflection {
 

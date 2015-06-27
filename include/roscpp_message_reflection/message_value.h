@@ -8,10 +8,13 @@
 #include <boost/icl/type_traits/is_numeric.hpp>
 #include <boost/mpl/vector.hpp>
 #include <boost/type_traits.hpp>
+#include <boost/shared_ptr.hpp>
 #include <ros/time.h>
 #include <ros/duration.h>
 
 namespace roscpp_message_reflection {
+
+class Message;
 
 template <typename Stream>
 class stream_next_visitor
@@ -24,6 +27,11 @@ public:
   void operator()(T& value)
   {
     stream_.next(value);
+  }
+  template <typename T>
+  void operator()(boost::shared_ptr<T> value)
+  {
+    stream_.next(*value);
   }
 private:
   Stream& stream_;
@@ -86,12 +94,21 @@ public:
 
 class MessageValue {
 public:
+  typedef boost::shared_ptr<Message> MessageT;
+
   template <typename T>
   static MessageValue Create() {
     MessageValue value;
     value.morph<T>();
     return value;
   }
+  template <typename T>
+  static MessageValue Create(T contents) {
+    MessageValue value;
+    value.value_ = contents;
+    return value;
+  }
+  static MessageValue Create(Message& contents);
 
   template <typename T> void operator=(const T& other) {
     assignment_visitor<T> visitor(other);
@@ -106,6 +123,8 @@ public:
     get_visitor<OtherT> visitor;
     return boost::apply_visitor(visitor, value_);
   }
+
+  MessageValue& operator[](const std::string& name);
 
   template <typename T> void morph() {
     value_ = T();
@@ -137,7 +156,8 @@ private:
   double,
   std::string,
   ros::Time,
-  ros::Duration
+  ros::Duration,
+  MessageT
   > value_type_vec;
   typedef boost::make_variant_over<value_type_vec>::type value_type;
   value_type value_;

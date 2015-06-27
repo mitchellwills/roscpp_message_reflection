@@ -36,12 +36,18 @@ void MessageReflectionServerMessageDescriptionProvider::fillCache(const std::str
   request.type = type;
   GetMessageInfo::Response response;
   if(description_service_.call(request, response)) {
-    BOOST_FOREACH(const MessageInfo& info, response.infos) {
+    BOOST_REVERSE_FOREACH(const MessageInfo& info, response.infos) {
       std::vector<FieldDescription> fields;
+      std::map<std::string, MessageDescription::Ptr> child_messages;
       BOOST_FOREACH(const MessageFieldInfo& field_info, info.fields) {
-	fields.push_back(FieldDescription::CreateFromFullType(field_info.name, field_info.type));
+	FieldDescription field = FieldDescription::CreateFromFullType(field_info.name, field_info.type);
+	fields.push_back(field);
+	MessageDescription::Ptr field_value_message = getDescription(field.value_type());
+	if(field_value_message) {
+	  child_messages[field_value_message->name] = field_value_message;
+	}
       }
-      cache_[info.type] = MessageDescription::Ptr(new MessageDescription(info.type, info.md5sum, info.definition, fields));
+      cache_[info.type] = MessageDescription::Ptr(new MessageDescription(info.type, info.md5sum, info.definition, fields, child_messages));
     }
   }
   else {

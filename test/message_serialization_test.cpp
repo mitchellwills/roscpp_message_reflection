@@ -1,6 +1,8 @@
 #include <gtest/gtest.h>
 #include <ros/ros.h>
 #include <roscpp_message_reflection/message.h>
+#include <roscpp_message_reflection/message_impl.h>
+#include <roscpp_message_reflection/message_value.h>
 #include <roscpp_message_reflection/message_description_provider.h>
 #include <std_msgs/Bool.h>
 #include <std_msgs/Byte.h>
@@ -17,6 +19,7 @@
 #include <std_msgs/Time.h>
 #include <std_msgs/Duration.h>
 #include <geometry_msgs/Vector3.h>
+#include <geometry_msgs/Twist.h>
 
 using namespace roscpp_message_reflection;
 
@@ -116,6 +119,56 @@ TEST_F(MessageSerializationTest, serialize_geometry_msgs_Vector3) {
   EXPECT_EQ(2.0, output.y);
   EXPECT_EQ(3.3, output.z);
 }
+
+
+TEST_F(MessageSerializationTest, deserialize_geometry_msgs_Twist) {
+  geometry_msgs::Twist input;
+  input.linear.x = 1.5;
+  input.linear.y = 2.0;
+  input.linear.z = 3.3;
+  input.angular.x = 2.2;
+  input.angular.y = 25.3;
+  input.angular.z = 11;
+
+  serialized_message = ros::serialization::serializeMessage(input);
+
+  Message message;
+  message.morph(description_provider->getDescription("geometry_msgs/Twist"));
+  ros::serialization::deserializeMessage(serialized_message, message);
+
+  EXPECT_EQ(input.linear.x, message["linear"]["x"].as<double>());
+  EXPECT_EQ(input.linear.y, message["linear"]["y"].as<double>());
+  EXPECT_EQ(input.linear.z, message["linear"]["z"].as<double>());
+  EXPECT_EQ(input.angular.x, message["angular"]["x"].as<double>());
+  EXPECT_EQ(input.angular.y, message["angular"]["y"].as<double>());
+  EXPECT_EQ(input.angular.z, message["angular"]["z"].as<double>());
+}
+
+
+
+TEST_F(MessageSerializationTest, serialize_geometry_msgs_Twist) {
+  Message message;
+  message.morph(description_provider->getDescription("geometry_msgs/Twist"));
+  message["linear"]["x"] = 1.5;
+  message["linear"]["y"] = 2.0;
+  message["linear"]["z"] = 3.3;
+  message["angular"]["x"] = 2.2;
+  message["angular"]["y"] = 25.3;
+  message["angular"]["z"] = 11;
+
+  serialized_message = ros::serialization::serializeMessage(message);
+
+  geometry_msgs::Twist output;
+  ros::serialization::deserializeMessage(serialized_message, output);
+
+  EXPECT_EQ(1.5, output.linear.x);
+  EXPECT_EQ(2.0, output.linear.y);
+  EXPECT_EQ(3.3, output.linear.z);
+  EXPECT_EQ(2.2, output.angular.x);
+  EXPECT_EQ(25.3, output.angular.y);
+  EXPECT_EQ(11, output.angular.z);
+}
+
 
 int main(int argc, char **argv){
   testing::InitGoogleTest(&argc, argv);

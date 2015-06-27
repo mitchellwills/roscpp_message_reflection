@@ -1,19 +1,27 @@
 #include <roscpp_message_reflection/message.h>
 #include <roscpp_message_reflection/message_value.h>
+#include <boost/foreach.hpp>
 
 namespace roscpp_message_reflection {
 
+Message::FieldEntry::FieldEntry(const std::string& name, const MessageValue& value)
+  : name(name), value(value) {}
+
+Message::Message() {}
+Message::~Message() {}
+
 MessageValue& Message::operator[](const std::string& name) {
-  std::map<std::string, MessageValue>::iterator itr = fields_.find(name);
-  if(itr == fields_.end()) {
-    throw MessageException("Message: " + description_->name + " does not contain a field: " + name);
+  BOOST_FOREACH(FieldEntry& entry, fields_) {
+    if(entry.name == name) {
+      return entry.value;
+    }
   }
-  return itr->second;
+  throw MessageException("Message: " + description_->name + " does not contain a field: " + name);
 }
 
 #define VALUE_MORPH(label, type_name)					\
   else if(field.value_type() == label) {				\
-    fields_[field.name()] = MessageValue::Create<type_name>();		\
+    fields_.push_back(FieldEntry(field.name(), MessageValue::Create<type_name>())); \
   }
 #define VALUE_MORPH_INT(int_type)		\
   VALUE_MORPH(#int_type, int_type##_t)
@@ -44,7 +52,16 @@ void Message::morph(MessageDescription::Ptr description) {
       VALUE_MORPH("time", ros::Time)
       VALUE_MORPH("duration", ros::Duration)
       else {
-	throw MessageException("Unsupported field value type: " + field.value_type());
+	std::map<std::string, MessageDescription::Ptr>::iterator itr = description_->child_messages.find(field.value_type());
+	if(itr != description_->child_messages.end()) {
+	  Message message;
+	  message.morph(itr->second);
+	  ROS_ERROR_STREAM(field.name() << " : " << fields_.size());
+	  fields_.push_back(FieldEntry(field.name(), MessageValue::Create(message)));
+	}
+	else {
+	  throw MessageException("Unsupported field value type: " + field.value_type());
+	}
       }
     }
     else {

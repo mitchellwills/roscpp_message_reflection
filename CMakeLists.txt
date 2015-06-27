@@ -57,6 +57,7 @@ include_directories(
 
 add_library(${PROJECT_NAME}
   src/message.cpp
+  src/message_value.cpp
   src/message_description_provider.cpp
 )
 
