@@ -106,31 +106,31 @@ TEST_F(MessageDescriptionProviderTest, get_geometry_msgs_Vector3_description)
 }
 
 // Tests expansion of type without package and fixed length array
-TEST_F(MessageDescriptionProviderTest, get_geometry_msgs_AccelWithCovariance_description)
+TEST_F(MessageDescriptionProviderTest, get_geometry_msgs_PoseWithCovariance_description)
 {
-  MessageDescription::Ptr description = provider->getDescription("geometry_msgs/AccelWithCovariance");
+  MessageDescription::Ptr description = provider->getDescription("geometry_msgs/PoseWithCovariance");
   ASSERT_TRUE(description);
-  EXPECT_EQ("geometry_msgs/AccelWithCovariance", description->name);
-  EXPECT_EQ("ad5a718d699c6be72a02b8d6a139f334", description->md5sum);
-  EXPECT_EQ("# This expresses acceleration in free space with uncertainty.\n\nAccel accel\n\n# Row-major representation of the 6x6 covariance matrix\n# The orientation parameters use a fixed-axis representation.\n# In order, the parameters are:\n# (x, y, z, rotation about X axis, rotation about Y axis, rotation about Z axis)\nfloat64[36] covariance\n\n================================================================================\nMSG: geometry_msgs/Accel\n# This expresses acceleration in free space broken into its linear and angular parts.\nVector3  linear\nVector3  angular\n\n================================================================================\nMSG: geometry_msgs/Vector3\n# This represents a vector in free space. \n\nfloat64 x\nfloat64 y\nfloat64 z\n", description->full_text);
+  EXPECT_EQ("geometry_msgs/PoseWithCovariance", description->name);
+  EXPECT_EQ("c23e848cf1b7533a8d7c259073a97e6f", description->md5sum);
+  EXPECT_EQ("# This represents a pose in free space with uncertainty.\n\nPose pose\n\n# Row-major representation of the 6x6 covariance matrix\n# The orientation parameters use a fixed-axis representation.\n# In order, the parameters are:\n# (x, y, z, rotation about X axis, rotation about Y axis, rotation about Z axis)\nfloat64[36] covariance\n\n================================================================================\nMSG: geometry_msgs/Pose\n# A representation of pose in free space, composed of postion and orientation. \nPoint position\nQuaternion orientation\n\n================================================================================\nMSG: geometry_msgs/Point\n# This contains the position of a point in free space\nfloat64 x\nfloat64 y\nfloat64 z\n\n================================================================================\nMSG: geometry_msgs/Quaternion\n# This represents an orientation in free space in quaternion form.\n\nfloat64 x\nfloat64 y\nfloat64 z\nfloat64 w\n\n", description->full_text);
 
   ASSERT_EQ(2, description->fields.size());
-  EXPECT_VALUE_FIELD("accel", "geometry_msgs/Accel", description->fields[0]);
+  EXPECT_VALUE_FIELD("pose", "geometry_msgs/Pose", description->fields[0]);
   EXPECT_FIXED_LENGTH_ARRAY_FIELD("covariance", "float64", 36, description->fields[1]);
 }
 
 // Tests expansion of type without package recursivly
-TEST_F(MessageDescriptionProviderTest, get_geometry_msgs_AccelWithCovarianceStamped_description)
+TEST_F(MessageDescriptionProviderTest, get_geometry_msgs_PoseWithCovarianceStamped_description)
 {
-  MessageDescription::Ptr description = provider->getDescription("geometry_msgs/AccelWithCovarianceStamped");
+  MessageDescription::Ptr description = provider->getDescription("geometry_msgs/PoseWithCovarianceStamped");
   ASSERT_TRUE(description);
-  EXPECT_EQ("geometry_msgs/AccelWithCovarianceStamped", description->name);
-  EXPECT_EQ("96adb295225031ec8d57fb4251b0a886", description->md5sum);
-  EXPECT_EQ("# This represents an estimated accel with reference coordinate frame and timestamp.\nHeader header\nAccelWithCovariance accel\n\n================================================================================\nMSG: std_msgs/Header\n# Standard metadata for higher-level stamped data types.\n# This is generally used to communicate timestamped data \n# in a particular coordinate frame.\n# \n# sequence ID: consecutively increasing ID \nuint32 seq\n#Two-integer timestamp that is expressed as:\n# * stamp.sec: seconds (stamp_secs) since epoch (in Python the variable is called 'secs')\n# * stamp.nsec: nanoseconds since stamp_secs (in Python the variable is called 'nsecs')\n# time-handling sugar is provided by the client library\ntime stamp\n#Frame this data is associated with\n# 0: no frame\n# 1: global frame\nstring frame_id\n\n================================================================================\nMSG: geometry_msgs/AccelWithCovariance\n# This expresses acceleration in free space with uncertainty.\n\nAccel accel\n\n# Row-major representation of the 6x6 covariance matrix\n# The orientation parameters use a fixed-axis representation.\n# In order, the parameters are:\n# (x, y, z, rotation about X axis, rotation about Y axis, rotation about Z axis)\nfloat64[36] covariance\n\n================================================================================\nMSG: geometry_msgs/Accel\n# This expresses acceleration in free space broken into its linear and angular parts.\nVector3  linear\nVector3  angular\n\n================================================================================\nMSG: geometry_msgs/Vector3\n# This represents a vector in free space. \n\nfloat64 x\nfloat64 y\nfloat64 z\n", description->full_text);
+  EXPECT_EQ("geometry_msgs/PoseWithCovarianceStamped", description->name);
+  EXPECT_EQ("953b798c0f514ff060a53a3498ce6246", description->md5sum);
+  EXPECT_EQ("# This expresses an estimated pose with a reference coordinate frame and timestamp\n\nHeader header\nPoseWithCovariance pose\n\n================================================================================\nMSG: std_msgs/Header\n# Standard metadata for higher-level stamped data types.\n# This is generally used to communicate timestamped data \n# in a particular coordinate frame.\n# \n# sequence ID: consecutively increasing ID \nuint32 seq\n#Two-integer timestamp that is expressed as:\n# * stamp.sec: seconds (stamp_secs) since epoch (in Python the variable is called 'secs')\n# * stamp.nsec: nanoseconds since stamp_secs (in Python the variable is called 'nsecs')\n# time-handling sugar is provided by the client library\ntime stamp\n#Frame this data is associated with\n# 0: no frame\n# 1: global frame\nstring frame_id\n\n================================================================================\nMSG: geometry_msgs/PoseWithCovariance\n# This represents a pose in free space with uncertainty.\n\nPose pose\n\n# Row-major representation of the 6x6 covariance matrix\n# The orientation parameters use a fixed-axis representation.\n# In order, the parameters are:\n# (x, y, z, rotation about X axis, rotation about Y axis, rotation about Z axis)\nfloat64[36] covariance\n\n================================================================================\nMSG: geometry_msgs/Pose\n# A representation of pose in free space, composed of postion and orientation. \nPoint position\nQuaternion orientation\n\n================================================================================\nMSG: geometry_msgs/Point\n# This contains the position of a point in free space\nfloat64 x\nfloat64 y\nfloat64 z\n\n================================================================================\nMSG: geometry_msgs/Quaternion\n# This represents an orientation in free space in quaternion form.\n\nfloat64 x\nfloat64 y\nfloat64 z\nfloat64 w\n\n", description->full_text);
 
   ASSERT_EQ(2, description->fields.size());
   EXPECT_VALUE_FIELD("header", "std_msgs/Header", description->fields[0]);
-  EXPECT_VALUE_FIELD("accel", "geometry_msgs/AccelWithCovariance", description->fields[1]);
+  EXPECT_VALUE_FIELD("pose", "geometry_msgs/PoseWithCovariance", description->fields[1]);
 }
 
 
