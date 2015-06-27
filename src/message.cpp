@@ -56,7 +56,6 @@ void Message::morph(MessageDescription::Ptr description) {
 	if(itr != description_->child_messages.end()) {
 	  Message message;
 	  message.morph(itr->second);
-	  ROS_ERROR_STREAM(field.name() << " : " << fields_.size());
 	  fields_.push_back(FieldEntry(field.name(), MessageValue::Create(message)));
 	}
 	else {
