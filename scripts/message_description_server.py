@@ -18,7 +18,7 @@ def get_message_info(type):
     msg = get_message(type)
     info = MessageInfo(type=msg._type, md5sum=msg._md5sum, definition=msg._full_text)
     for i in xrange(len(msg.__slots__)):
-        info.fields.append(MessageField(name=msg.__slots__[i], type=msg._slot_types[i]))
+        info.fields.append(MessageFieldInfo(name=msg.__slots__[i], type=msg._slot_types[i]))
     return info
 
 # prepend package name
