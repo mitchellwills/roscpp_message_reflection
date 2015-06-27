@@ -16,6 +16,16 @@ using namespace roscpp_message_reflection;
     EXPECT_EQ(1, value.as<other_arithmetic_type>());			\
   }
 #define DECLARE_ARITHMETIC_VALUE_TESTS_true(value_type_name, value_type) \
+  TEST(MessageValueTest, assign_and_retrieve_array_arithmetic_inc_##value_type_name) { \
+    MessageValue value = MessageValue::CreateArray<value_type>();	\
+    value.resize(10);							\
+    for(int i = 0; i < 10; ++i) {					\
+      value.get<value_type>(i) = 2 * i;					\
+    }									\
+    for(int i = 0; i < 10; ++i) {					\
+      EXPECT_EQ(2 * i, value.get<value_type>(i));			\
+    }									\
+  }									\
   DECLARE_ARITHMETIC_VALUE_TESTS_WITH_OTHER_TYPE(value_type_name, value_type, int8_t) \
   DECLARE_ARITHMETIC_VALUE_TESTS_WITH_OTHER_TYPE(value_type_name, value_type, uint8_t) \
   DECLARE_ARITHMETIC_VALUE_TESTS_WITH_OTHER_TYPE(value_type_name, value_type, int16_t) \
