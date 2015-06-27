@@ -19,12 +19,28 @@ MessageValue& Message::operator[](const std::string& name) {
   throw MessageException("Message: " + description_->name + " does not contain a field: " + name);
 }
 
-#define VALUE_MORPH(label, type_name)					\
-  else if(field.value_type() == label) {				\
-    fields_.push_back(FieldEntry(field.name(), MessageValue::Create<type_name>())); \
+
+class value_field_construction_visitor
+{
+public:
+  typedef void result_type;
+  value_field_construction_visitor(std::vector<Message::FieldEntry>& fields, const std::string& field_name)
+    : fields_(fields), field_name_(field_name) {}
+  template <typename T>
+  result_type operator()()
+  {
+    fields_.push_back(Message::FieldEntry(field_name_, MessageValue::Create<T>()));
   }
-#define VALUE_MORPH_INT(int_type)		\
-  VALUE_MORPH(#int_type, int_type##_t)
+  result_type operator()(MessageDescription::Ptr message_description)
+  {
+    Message message;
+    message.morph(message_description);
+    fields_.push_back(Message::FieldEntry(field_name_, MessageValue::Create(message)));
+  }
+private:
+  const std::string field_name_;
+  std::vector<Message::FieldEntry>& fields_;
+};
 
 void Message::morph(MessageDescription::Ptr description) {
   if(description_ == description)
@@ -34,34 +50,8 @@ void Message::morph(MessageDescription::Ptr description) {
   fields_.clear();
   BOOST_FOREACH(const FieldDescription& field, description_->fields) {
     if(field.type() == FieldDescription::Value) {
-      if(false) {}
-      VALUE_MORPH("bool", uint8_t)
-      VALUE_MORPH("byte", int8_t)
-      VALUE_MORPH("char", uint8_t)
-      VALUE_MORPH_INT(int8)
-      VALUE_MORPH_INT(uint8)
-      VALUE_MORPH_INT(int16)
-      VALUE_MORPH_INT(uint16)
-      VALUE_MORPH_INT(int32)
-      VALUE_MORPH_INT(uint32)
-      VALUE_MORPH_INT(int64)
-      VALUE_MORPH_INT(uint64)
-      VALUE_MORPH("float32", float)
-      VALUE_MORPH("float64", double)
-      VALUE_MORPH("string", std::string)
-      VALUE_MORPH("time", ros::Time)
-      VALUE_MORPH("duration", ros::Duration)
-      else {
-	std::map<std::string, MessageDescription::Ptr>::iterator itr = description_->child_messages.find(field.value_type());
-	if(itr != description_->child_messages.end()) {
-	  Message message;
-	  message.morph(itr->second);
-	  fields_.push_back(FieldEntry(field.name(), MessageValue::Create(message)));
-	}
-	else {
-	  throw MessageException("Unsupported field value type: " + field.value_type());
-	}
-      }
+      value_field_construction_visitor visitor(fields_, field.name());
+      visit_field_type(description, visitor, field.value_type());
     }
     else {
       throw MessageException("MessageValue only supports value fields");

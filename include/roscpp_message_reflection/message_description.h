@@ -97,6 +97,42 @@ struct MessageDescription {
   std::map<std::string, MessageDescription::Ptr> child_messages;
 };
 
+
+#define VISIT_TYPE(type_name, native_type)		\
+  else if(field_type == type_name) {			\
+    return visitor.template operator()<native_type>();	\
+  }
+
+#define VISIT_TYPE_INT(int_size)			\
+  VISIT_TYPE("int"#int_size, int##int_size##_t)		\
+  VISIT_TYPE("uint"#int_size, uint##int_size##_t)
+
+template<typename Visitor>
+typename Visitor::result_type visit_field_type(MessageDescription::Ptr& description, Visitor& visitor, const std::string& field_type) {
+  if(false) {}
+  VISIT_TYPE("bool", uint8_t)
+  VISIT_TYPE("byte", int8_t)
+  VISIT_TYPE("char", uint8_t)
+  VISIT_TYPE_INT(8)
+  VISIT_TYPE_INT(16)
+  VISIT_TYPE_INT(32)
+  VISIT_TYPE_INT(64)
+  VISIT_TYPE("float32", float)
+  VISIT_TYPE("float64", double)
+  VISIT_TYPE("string", std::string)
+  VISIT_TYPE("time", ros::Time)
+  VISIT_TYPE("duration", ros::Duration)
+  else {
+    std::map<std::string, MessageDescription::Ptr>::iterator itr = description->child_messages.find(field_type);
+    if(itr != description->child_messages.end()) {
+      visitor(itr->second);
+    }
+    else {
+      throw MessageException("Unsupported field value type: " + field_type);
+    }
+  }
+}
+
 }
 
 #endif

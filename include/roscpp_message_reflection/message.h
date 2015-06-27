@@ -22,13 +22,13 @@ public:
 
   void morph(MessageDescription::Ptr description);
 
-private:
   struct FieldEntry {
     FieldEntry(const std::string& name, const MessageValue& value);
     std::string name;
     MessageValue value;
   };
 
+private:
   MessageDescription::Ptr description_;
   std::vector<FieldEntry> fields_;
 };
