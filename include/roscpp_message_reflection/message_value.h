@@ -3,11 +3,14 @@
 
 #include <stdint.h>
 #include <string>
+#include <roscpp_message_reflection/message_exception.h>
+#include <roscpp_message_reflection/util.h>
 #include <boost/variant.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 #include <boost/icl/type_traits/is_numeric.hpp>
 #include <boost/mpl/vector.hpp>
 #include <boost/type_traits.hpp>
+#include <boost/foreach.hpp>
 #include <boost/shared_ptr.hpp>
 #include <ros/time.h>
 #include <ros/duration.h>
@@ -17,11 +20,11 @@ namespace roscpp_message_reflection {
 class Message;
 
 template <typename Stream>
-class stream_next_visitor
+class istream_next_visitor
   : public boost::static_visitor<>
 {
 public:
-  stream_next_visitor(Stream& stream)
+  istream_next_visitor(Stream& stream)
     : stream_(stream) {}
   template <typename T>
   void operator()(T& value)
@@ -29,9 +32,60 @@ public:
     stream_.next(value);
   }
   template <typename T>
-  void operator()(boost::shared_ptr<T> value)
+  void operator()(boost::shared_ptr<T>& value)
   {
     stream_.next(*value);
+  }
+
+  template <typename T>
+  void operator()(std::vector<T>& array)
+  {
+    stream_.next(array);
+  }
+  template <typename T>
+  void operator()(std::vector<boost::shared_ptr<T> >& array)
+  {
+    uint32_t size;
+    stream_.next(size);
+    array.resize(size);
+    for(int i = 0; i < size; ++i) {
+      operator()(array[i]);
+    }
+  }
+private:
+  Stream& stream_;
+};
+
+template <typename Stream>
+class ostream_next_visitor
+  : public boost::static_visitor<>
+{
+public:
+  ostream_next_visitor(Stream& stream)
+    : stream_(stream) {}
+  template <typename T>
+  void operator()(const T& value)
+  {
+    stream_.next(value);
+  }
+  template <typename T>
+  void operator()(const boost::shared_ptr<T>& value)
+  {
+    stream_.next(*value);
+  }
+
+  template <typename T>
+  void operator()(const std::vector<T>& array)
+  {
+    stream_.next(array);
+  }
+  template <typename T>
+  void operator()(const std::vector<boost::shared_ptr<T> >& array)
+  {
+    stream_.next((uint32_t)array.size());
+    for(int i = 0; i < array.size(); ++i) {
+      operator()(array[i]);
+    }
   }
 private:
   Stream& stream_;
@@ -43,8 +97,8 @@ typename boost::enable_if_c<!(boost::is_arithmetic<InputT>::value && boost::is_a
 convert(const InputT& value)
 {
   std::stringstream ss;
-  ss << "Cannot cast " << typeid(InputT).name() << " to " << typeid(TargetT).name();
-  throw std::runtime_error(ss.str());
+  ss << "Cannot cast " << demangle_type<InputT>() << " to " << demangle_type<TargetT>();
+  throw MessageException(ss.str());
 }
 
 template <typename TargetT, typename InputT>
@@ -81,7 +135,7 @@ private:
 };
 
 template <typename TargetT>
-class get_visitor
+class as_visitor
   : public boost::static_visitor<TargetT>
 {
 public:
@@ -92,6 +146,84 @@ public:
   }
 };
 
+class size_visitor
+  : public boost::static_visitor<size_t>
+{
+public:
+  template <typename T>
+  size_t operator()(T& value) const
+  {
+    std::stringstream ss;
+    ss << "Cannot get size of " << demangle_type<T>();
+    throw MessageException(ss.str());
+  }
+  template <typename T>
+  size_t operator()(const std::vector<T>& array) const
+  {
+    return array.size();
+  }
+};
+
+template <typename ValueT>
+class get_array_index_visitor
+  : public boost::static_visitor<ValueT&>
+{
+public:
+  get_array_index_visitor(size_t index) : index_(index) {}
+
+  template <typename T>
+  ValueT& operator()(T& value) const
+  {
+    std::stringstream ss;
+    ss << "Cannot get indexed value from non-array " << demangle_type<T>();
+    throw MessageException(ss.str());
+  }
+  template <typename T>
+  ValueT& operator()(std::vector<T>& value) const
+  {
+    std::stringstream ss;
+    ss << "Cannot get indexed value from mismatched array of type: " << demangle_type<T>()
+       << ", looking for array of type: " << demangle_type<ValueT>();
+    throw MessageException(ss.str());
+  }
+  ValueT& operator()(std::vector<ValueT>& array) const
+  {
+    return array[index_];
+  }
+private:
+  size_t index_;
+};
+
+class resize_visitor
+  : public boost::static_visitor<>
+{
+public:
+  resize_visitor(size_t new_size) : new_size_(new_size) {}
+
+  template <typename T>
+  void operator()(T& value) const
+  {
+    std::stringstream ss;
+    ss << "Cannot resize a non-array " << demangle_type<T>();
+    throw MessageException(ss.str());
+  }
+  template <typename T>
+  void operator()(std::vector<T>& array) const
+  {
+    return array.resize(new_size_);
+  }
+
+  template <typename T>
+  void operator()(std::vector<boost::shared_ptr<T> >& array) const
+  {
+    throw MessageException("Cannot resize an array of shared_ptr");
+  }
+
+private:
+  size_t new_size_;
+};
+
+
 class MessageValue {
 public:
   typedef boost::shared_ptr<Message> MessageT;
@@ -100,6 +232,12 @@ public:
   static MessageValue Create() {
     MessageValue value;
     value.morph<T>();
+    return value;
+  }
+  template <typename T>
+  static MessageValue CreateArray() {
+    MessageValue value;
+    value.morph<std::vector<T> >();
     return value;
   }
   template <typename T>
@@ -120,11 +258,25 @@ public:
   }
 
   template <typename OtherT> OtherT as() const {
-    get_visitor<OtherT> visitor;
+    as_visitor<OtherT> visitor;
     return boost::apply_visitor(visitor, value_);
   }
 
   MessageValue& operator[](const std::string& name);
+
+  template <typename T> T& get(size_t index){
+    get_array_index_visitor<T> visitor(index);
+    return boost::apply_visitor(visitor, value_);
+  }
+
+  size_t size() const {
+     return boost::apply_visitor(size_visitor(), value_);
+  }
+
+  void resize(size_t size) {
+    resize_visitor visitor(size);
+    boost::apply_visitor(visitor, value_);
+  }
 
   template <typename T> void morph() {
     value_ = T();
@@ -132,13 +284,13 @@ public:
 
   template<typename Stream>
   void deserialize(Stream& stream) {
-    stream_next_visitor<Stream> visitor(stream);
+    istream_next_visitor<Stream> visitor(stream);
     boost::apply_visitor(visitor, value_);
   }
 
   template<typename Stream>
   void serialize(Stream& stream) const {
-    stream_next_visitor<Stream> visitor(stream);
+    ostream_next_visitor<Stream> visitor(stream);
     boost::apply_visitor(visitor, value_);
   }
 
@@ -157,7 +309,21 @@ private:
   std::string,
   ros::Time,
   ros::Duration,
-  MessageT
+  MessageT,
+  std::vector<int8_t>,
+  std::vector<uint8_t>,
+  std::vector<int16_t>,
+  std::vector<uint16_t>,
+  std::vector<int32_t>,
+  std::vector<uint32_t>,
+  std::vector<int64_t>,
+  std::vector<uint64_t>,
+  std::vector<float>,
+  std::vector<double>,
+  std::vector<std::string>,
+  std::vector<ros::Time>,
+  std::vector<ros::Duration>,
+  std::vector<MessageT>
   > value_type_vec;
   typedef boost::make_variant_over<value_type_vec>::type value_type;
   value_type value_;

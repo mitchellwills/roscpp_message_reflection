@@ -20,6 +20,7 @@
 #include <std_msgs/Duration.h>
 #include <geometry_msgs/Vector3.h>
 #include <geometry_msgs/Twist.h>
+#include <sensor_msgs/CompressedImage.h>
 
 using namespace roscpp_message_reflection;
 
@@ -167,6 +168,51 @@ TEST_F(MessageSerializationTest, serialize_geometry_msgs_Twist) {
   EXPECT_EQ(2.2, output.angular.x);
   EXPECT_EQ(25.3, output.angular.y);
   EXPECT_EQ(11, output.angular.z);
+}
+
+
+TEST_F(MessageSerializationTest, deserialize_sensor_msgs_CompressedImage) {
+  sensor_msgs::CompressedImage input;
+  input.format = "test";
+  input.data.resize(10);
+  for(int i = 0; i < 10; ++i) {
+    input.data[i] = i*2.2;
+  }
+
+  serialized_message = ros::serialization::serializeMessage(input);
+
+  Message message;
+  message.morph(description_provider->getDescription("sensor_msgs/CompressedImage"));
+  ros::serialization::deserializeMessage(serialized_message, message);
+
+  EXPECT_EQ(input.format, message["format"].as<std::string>());
+  ASSERT_EQ(input.data.size(), message["data"].size());
+  for(int i = 0; i < input.data.size(); ++i) {
+    EXPECT_EQ(input.data[i], message["data"].get<uint8_t>(i));
+  }
+}
+
+
+
+TEST_F(MessageSerializationTest, serialize_sensor_msgs_CompressedImage) {
+  Message message;
+  message.morph(description_provider->getDescription("sensor_msgs/CompressedImage"));
+  message["format"] = "a test";
+  message["data"].resize(10);
+  for(int i = 0; i < 10; ++i) {
+    message["data"].get<uint8_t>(i) = i*2;
+  }
+
+  serialized_message = ros::serialization::serializeMessage(message);
+
+  sensor_msgs::CompressedImage output;
+  ros::serialization::deserializeMessage(serialized_message, output);
+
+  EXPECT_EQ("a test", output.format);
+  ASSERT_EQ(10, output.data.size());
+  for(int i = 0; i < 10; ++i) {
+    EXPECT_EQ(i*2, output.data[i]);
+  }
 }
 
 

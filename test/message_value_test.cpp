@@ -33,6 +33,16 @@ using namespace roscpp_message_reflection;
     value = test_data;							\
     EXPECT_EQ(test_data, value.as<value_type>());			\
   }									\
+  TEST(MessageValueTest, assign_and_retrieve_array_##value_type_name) {	\
+    MessageValue value = MessageValue::CreateArray<value_type>();	\
+    value.resize(10);							\
+    for(int i = 0; i < 10; ++i) {					\
+      value.get<value_type>(i) = test_data;				\
+    }									\
+    for(int i = 0; i < 10; ++i) {					\
+      EXPECT_EQ(test_data, value.get<value_type>(i));			\
+    }									\
+  }									\
   DECLARE_ARITHMETIC_VALUE_TESTS_##is_arithmentic (value_type_name, value_type)
 
 DECLARE_VALUE_TESTS(int8, int8_t, -2, true);
@@ -47,6 +57,8 @@ DECLARE_VALUE_TESTS(string_from_char_star, std::string, "hello this is a test", 
 DECLARE_VALUE_TESTS(string, std::string, std::string("hello this is a test"), false);
 DECLARE_VALUE_TESTS(time, ros::Time, ros::Time(100), false);
 DECLARE_VALUE_TESTS(duration, ros::Duration, ros::Duration(50), false);
+
+// TODO message value tests
 
 int main(int argc, char **argv){
   testing::InitGoogleTest(&argc, argv);
