@@ -3,14 +3,4 @@
 
 namespace roscpp_message_reflection {
 
-MessageValue& MessageValue::operator[](const std::string& name) {
-  return as<MessageT>()->operator[](name);
-}
-
-MessageValue MessageValue::Create(Message& contents) {
-  MessageValue value;
-  value.value_ = MessageT(new Message(contents));
-  return value;
-}
-
 }

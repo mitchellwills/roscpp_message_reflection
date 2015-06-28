@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <string>
+#include <roscpp_message_reflection/message.h>
 #include <roscpp_message_reflection/message_exception.h>
 #include <roscpp_message_reflection/util.h>
 #include <boost/variant.hpp>
@@ -11,7 +12,6 @@
 #include <boost/mpl/vector.hpp>
 #include <boost/type_traits.hpp>
 #include <boost/foreach.hpp>
-#include <boost/shared_ptr.hpp>
 #include <ros/time.h>
 #include <ros/duration.h>
 
@@ -31,26 +31,11 @@ public:
   {
     stream_.next(value);
   }
-  template <typename T>
-  void operator()(boost::shared_ptr<T>& value)
-  {
-    stream_.next(*value);
-  }
 
   template <typename T>
   void operator()(std::vector<T>& array)
   {
     stream_.next(array);
-  }
-  template <typename T>
-  void operator()(std::vector<boost::shared_ptr<T> >& array)
-  {
-    uint32_t size;
-    stream_.next(size);
-    array.resize(size);
-    for(int i = 0; i < size; ++i) {
-      operator()(array[i]);
-    }
   }
 private:
   Stream& stream_;
@@ -68,24 +53,11 @@ public:
   {
     stream_.next(value);
   }
-  template <typename T>
-  void operator()(const boost::shared_ptr<T>& value)
-  {
-    stream_.next(*value);
-  }
 
   template <typename T>
   void operator()(const std::vector<T>& array)
   {
     stream_.next(array);
-  }
-  template <typename T>
-  void operator()(const std::vector<boost::shared_ptr<T> >& array)
-  {
-    stream_.next((uint32_t)array.size());
-    for(int i = 0; i < array.size(); ++i) {
-      operator()(array[i]);
-    }
   }
 private:
   Stream& stream_;
@@ -213,12 +185,6 @@ public:
     return array.resize(new_size_);
   }
 
-  template <typename T>
-  void operator()(std::vector<boost::shared_ptr<T> >& array) const
-  {
-    throw MessageException("Cannot resize an array of shared_ptr");
-  }
-
 private:
   size_t new_size_;
 };
@@ -226,7 +192,6 @@ private:
 
 class MessageValue {
 public:
-  typedef boost::shared_ptr<Message> MessageT;
 
   template <typename T>
   static MessageValue Create() {
@@ -246,7 +211,6 @@ public:
     value.value_ = contents;
     return value;
   }
-  static MessageValue Create(Message& contents);
 
   template <typename T> void operator=(const T& other) {
     assignment_visitor<T> visitor(other);
@@ -262,7 +226,13 @@ public:
     return boost::apply_visitor(visitor, value_);
   }
 
-  MessageValue& operator[](const std::string& name);
+  MessageValue& operator[](const std::string& name) {
+    return get<Message>()[name];
+  }
+
+  template <typename T> T& get(){
+    return boost::get<T>(value_);
+  }
 
   template <typename T> T& get(size_t index){
     get_array_index_visitor<T> visitor(index);
@@ -309,7 +279,7 @@ private:
   std::string,
   ros::Time,
   ros::Duration,
-  MessageT,
+  Message,
   std::vector<int8_t>,
   std::vector<uint8_t>,
   std::vector<int16_t>,
@@ -323,7 +293,7 @@ private:
   std::vector<std::string>,
   std::vector<ros::Time>,
   std::vector<ros::Duration>,
-  std::vector<MessageT>
+  std::vector<Message>
   > value_type_vec;
   typedef boost::make_variant_over<value_type_vec>::type value_type;
   value_type value_;

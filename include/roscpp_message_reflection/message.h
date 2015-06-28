@@ -4,14 +4,18 @@
 #include <string>
 #include <map>
 #include <roscpp_message_reflection/message_description.h>
-#include <roscpp_message_reflection/message_value.h>
 
 namespace roscpp_message_reflection {
+
+class MessageValue;
 
 class Message {
 public:
   Message();
+  Message(const Message& other);
+  Message& operator=(const Message& other);
   ~Message();
+
   MessageValue& operator[](const std::string& name);
 
   template<typename Stream>
@@ -22,11 +26,7 @@ public:
 
   void morph(MessageDescription::Ptr description);
 
-  struct FieldEntry {
-    FieldEntry(const std::string& name, const MessageValue& value);
-    std::string name;
-    MessageValue value;
-  };
+  struct FieldEntry;
 
 private:
   MessageDescription::Ptr description_;

@@ -1,11 +1,18 @@
 #ifndef ROSCPP_MESSAGE_REFLECTION_MESSAGE_IMPL_H
 #define ROSCPP_MESSAGE_REFLECTION_MESSAGE_IMPL_H
 
+#include <roscpp_message_reflection/message.h>
 #include <roscpp_message_reflection/message_description.h>
 #include <roscpp_message_reflection/message_value.h>
 #include <boost/foreach.hpp>
 
 namespace roscpp_message_reflection {
+
+struct Message::FieldEntry {
+  FieldEntry(const std::string& name, const MessageValue& value);
+  std::string name;
+  MessageValue value;
+};
 
 template<typename Stream>
 void Message::read(Stream& stream) {

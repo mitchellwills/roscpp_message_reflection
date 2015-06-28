@@ -1,4 +1,5 @@
 #include <roscpp_message_reflection/message.h>
+#include <roscpp_message_reflection/message_impl.h>
 #include <roscpp_message_reflection/message_value.h>
 #include <boost/foreach.hpp>
 
@@ -8,6 +9,14 @@ Message::FieldEntry::FieldEntry(const std::string& name, const MessageValue& val
   : name(name), value(value) {}
 
 Message::Message() {}
+Message::Message(const Message& other) {
+  description_ = other.description_;
+  fields_ = other.fields_;
+}
+Message& Message::operator=(const Message& other) {
+  description_ = other.description_;
+  fields_ = other.fields_;
+}
 Message::~Message() {}
 
 MessageValue& Message::operator[](const std::string& name) {
