@@ -20,6 +20,7 @@ Message& Message::operator=(const Message& other) {
 Message::~Message() {}
 
 MessageValue& Message::operator[](const std::string& name) {
+  assertValid();
   BOOST_FOREACH(FieldEntry& entry, fields_) {
     if(entry.name == name) {
       return entry.value;
@@ -60,13 +61,13 @@ public:
   template <typename T>
   result_type operator()()
   {
-    fields_.push_back(Message::FieldEntry(field_name_, MessageValue::Create<std::vector<T> >()));
+    fields_.push_back(Message::FieldEntry(field_name_, MessageValue::CreateArray<T>()));
   }
   result_type operator()(MessageDescription::Ptr message_description)
   {
-    /*Message message;
+    Message message;
     message.morph(message_description);
-    fields_.push_back(Message::FieldEntry(field_name_, MessageValue::Create(message)));*/
+    fields_.push_back(Message::FieldEntry(field_name_, MessageValue::CreateArray(message)));
   }
 private:
   const std::string field_name_;

@@ -20,6 +20,7 @@
 #include <std_msgs/Duration.h>
 #include <geometry_msgs/Vector3.h>
 #include <geometry_msgs/Twist.h>
+#include <geometry_msgs/PoseArray.h>
 #include <sensor_msgs/CompressedImage.h>
 
 using namespace roscpp_message_reflection;
@@ -169,6 +170,63 @@ TEST_F(MessageSerializationTest, serialize_geometry_msgs_Twist) {
   EXPECT_EQ(25.3, output.angular.y);
   EXPECT_EQ(11, output.angular.z);
 }
+
+
+TEST_F(MessageSerializationTest, deserialize_geometry_msgs_PoseArray) {
+  geometry_msgs::PoseArray input;
+  input.poses.resize(10);
+  for(int i = 0; i < 10; ++i) {
+    geometry_msgs::Pose pose;
+    pose.position.x = i*2.2;
+    pose.position.y = i*1;
+    pose.position.z = i*2;
+    input.poses[i] = pose;
+  }
+
+  serialized_message = ros::serialization::serializeMessage(input);
+
+  Message message;
+  message.morph(description_provider->getDescription("geometry_msgs/PoseArray"));
+  ros::serialization::deserializeMessage(serialized_message, message);
+
+  ASSERT_EQ(input.poses.size(), message["poses"].size());
+  for(int i = 0; i < input.poses.size(); ++i) {
+    Message& message = message["poses"].get<Message>(i);
+    EXPECT_EQ(input.poses[i].position.x, message["position"]["x"].as<double>());
+    EXPECT_EQ(input.poses[i].position.y, message["position"]["y"].as<double>());
+    EXPECT_EQ(input.poses[i].position.z, message["position"]["z"].as<double>());
+  }
+}
+
+
+
+TEST_F(MessageSerializationTest, serialize_geometry_msgs_PoseArray) {
+  Message message;
+  message.morph(description_provider->getDescription("geometry_msgs/PoseArray"));
+
+  message["poses"].resize(10);
+  for(int i = 0; i < 10; ++i) {
+    Message pose;
+    pose.morph(description_provider->getDescription("geometry_msgs/Pose"));
+    pose["position"]["x"] = i*2.2;
+    pose["position"]["y"] = i*1;
+    pose["position"]["z"] = i*2;
+    message["poses"].get<Message>(i) = pose;
+  }
+
+  serialized_message = ros::serialization::serializeMessage(message);
+
+  geometry_msgs::PoseArray output;
+  ros::serialization::deserializeMessage(serialized_message, output);
+
+  ASSERT_EQ(10, output.poses.size());
+  for(int i = 0; i < 10; ++i) {
+    EXPECT_EQ(i*2.2, output.poses[i].position.x);
+    EXPECT_EQ(i*1, output.poses[i].position.y);
+    EXPECT_EQ(i*2, output.poses[i].position.z);
+  }
+}
+
 
 
 TEST_F(MessageSerializationTest, deserialize_sensor_msgs_CompressedImage) {

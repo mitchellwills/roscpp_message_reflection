@@ -29,6 +29,7 @@ public:
   struct FieldEntry;
 
 private:
+  void assertValid() const;
   MessageDescription::Ptr description_;
   std::vector<FieldEntry> fields_;
 };

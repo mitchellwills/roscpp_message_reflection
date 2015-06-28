@@ -190,27 +190,32 @@ private:
 };
 
 
+template <typename T> struct is_vector {
+  static const bool value = false;
+};
+template <typename T> struct is_vector<std::vector<T> > {
+  static const bool value = true;
+};
+
 class MessageValue {
 public:
 
   template <typename T>
-  static MessageValue Create() {
+  static
+  typename boost::disable_if_c<is_vector<typename boost::remove_const<T>::type>::value, MessageValue>::type // cannot be used to create array
+  Create(const T& initial_value = T()) {
     MessageValue value;
-    value.morph<T>();
+    value.morph<T>(initial_value);
     return value;
   }
+
   template <typename T>
-  static MessageValue CreateArray() {
+  static MessageValue CreateArray(const T& default_value = T()) {
     MessageValue value;
-    value.morph<std::vector<T> >();
+    value.morphArray<T>();
     return value;
   }
-  template <typename T>
-  static MessageValue Create(T contents) {
-    MessageValue value;
-    value.value_ = contents;
-    return value;
-  }
+
 
   template <typename T> void operator=(const T& other) {
     assignment_visitor<T> visitor(other);
@@ -248,9 +253,19 @@ public:
     boost::apply_visitor(visitor, value_);
   }
 
-  template <typename T> void morph() {
-    value_ = T();
+  template <typename T>
+  typename boost::disable_if_c<is_vector<typename boost::remove_const<T>::type>::value, void>::type // cannot be used to create array
+  morph(const T& new_value = T()) {
+    value_ = new_value;
+    default_value_ = T();
   }
+
+  template <typename T>
+  void morphArray(const T& default_value = T()) {
+    value_ = std::vector<T>();
+    default_value_ = default_value;
+  }
+
 
   template<typename Stream>
   void deserialize(Stream& stream) {
@@ -297,6 +312,7 @@ private:
   > value_type_vec;
   typedef boost::make_variant_over<value_type_vec>::type value_type;
   value_type value_;
+  value_type default_value_;
 };
 
 }
