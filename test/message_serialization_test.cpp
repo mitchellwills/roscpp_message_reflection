@@ -191,10 +191,10 @@ TEST_F(MessageSerializationTest, deserialize_geometry_msgs_PoseArray) {
 
   ASSERT_EQ(input.poses.size(), message["poses"].size());
   for(int i = 0; i < input.poses.size(); ++i) {
-    Message& message = message["poses"].get<Message>(i);
-    EXPECT_EQ(input.poses[i].position.x, message["position"]["x"].as<double>());
-    EXPECT_EQ(input.poses[i].position.y, message["position"]["y"].as<double>());
-    EXPECT_EQ(input.poses[i].position.z, message["position"]["z"].as<double>());
+    Message& pose = message["poses"].get<Message>(i);
+    EXPECT_EQ(input.poses[i].position.x, pose["position"]["x"].as<double>());
+    EXPECT_EQ(input.poses[i].position.y, pose["position"]["y"].as<double>());
+    EXPECT_EQ(input.poses[i].position.z, pose["position"]["z"].as<double>());
   }
 }
 

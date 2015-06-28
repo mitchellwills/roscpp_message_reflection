@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <string>
 #include <roscpp_message_reflection/message.h>
+#include <roscpp_message_reflection/message_array.h>
 #include <roscpp_message_reflection/message_exception.h>
 #include <roscpp_message_reflection/util.h>
 #include <boost/variant.hpp>
@@ -37,6 +38,16 @@ public:
   {
     stream_.next(array);
   }
+
+  void operator()(MessageArray& array)
+  {
+    uint32_t new_size;
+    stream_.next(new_size);
+    array.resize(new_size);
+    for(size_t i = 0; i < array.size(); ++i) {
+      stream_.next(array[i]);
+    }
+  }
 private:
   Stream& stream_;
 };
@@ -58,6 +69,14 @@ public:
   void operator()(const std::vector<T>& array)
   {
     stream_.next(array);
+  }
+
+  void operator()(const MessageArray& array)
+  {
+    stream_.next((uint32_t)array.size());
+    for(size_t i = 0; i < array.size(); ++i) {
+      stream_.next(array[i]);
+    }
   }
 private:
   Stream& stream_;
@@ -134,6 +153,10 @@ public:
   {
     return array.size();
   }
+  size_t operator()(const MessageArray& array) const
+  {
+    return array.size();
+  }
 };
 
 template <typename ValueT>
@@ -162,6 +185,39 @@ public:
   {
     return array[index_];
   }
+
+private:
+  size_t index_;
+};
+
+// TODO figure out how to inherit some of these from the general version
+template<>
+class get_array_index_visitor<Message>
+  : public boost::static_visitor<Message&>
+{
+public:
+  get_array_index_visitor(size_t index) : index_(index) {}
+
+  template <typename T>
+  Message& operator()(T& value) const
+  {
+    std::stringstream ss;
+    ss << "Cannot get indexed value from non-array " << demangle_type<T>();
+    throw MessageException(ss.str());
+  }
+  template <typename T>
+  Message& operator()(std::vector<T>& value) const
+  {
+    std::stringstream ss;
+    ss << "Cannot get indexed value from mismatched array of type: " << demangle_type<T>()
+       << ", looking for array of type: " << demangle_type<Message>();
+    throw MessageException(ss.str());
+  }
+
+  Message& operator()(MessageArray& array) const
+  {
+    return array[index_];
+  }
 private:
   size_t index_;
 };
@@ -184,38 +240,31 @@ public:
   {
     return array.resize(new_size_);
   }
+  void operator()(MessageArray& array) const
+  {
+    return array.resize(new_size_);
+  }
 
 private:
   size_t new_size_;
 };
 
 
-template <typename T> struct is_vector {
-  static const bool value = false;
-};
-template <typename T> struct is_vector<std::vector<T> > {
-  static const bool value = true;
-};
-
 class MessageValue {
 public:
 
   template <typename T>
-  static
-  typename boost::disable_if_c<is_vector<typename boost::remove_const<T>::type>::value, MessageValue>::type // cannot be used to create array
-  Create(const T& initial_value = T()) {
+  static MessageValue Create(const T& initial_value = T()) {
     MessageValue value;
     value.morph<T>(initial_value);
     return value;
   }
-
-  template <typename T>
-  static MessageValue CreateArray(const T& default_value = T()) {
+  template <typename ValueT>
+  static MessageValue CreateArray() {
     MessageValue value;
-    value.morphArray<T>();
+    value.morph<std::vector<ValueT> >();
     return value;
   }
-
 
   template <typename T> void operator=(const T& other) {
     assignment_visitor<T> visitor(other);
@@ -254,16 +303,8 @@ public:
   }
 
   template <typename T>
-  typename boost::disable_if_c<is_vector<typename boost::remove_const<T>::type>::value, void>::type // cannot be used to create array
-  morph(const T& new_value = T()) {
+  void morph(const T& new_value = T()) {
     value_ = new_value;
-    default_value_ = T();
-  }
-
-  template <typename T>
-  void morphArray(const T& default_value = T()) {
-    value_ = std::vector<T>();
-    default_value_ = default_value;
   }
 
 
@@ -308,11 +349,10 @@ private:
   std::vector<std::string>,
   std::vector<ros::Time>,
   std::vector<ros::Duration>,
-  std::vector<Message>
+  MessageArray
   > value_type_vec;
   typedef boost::make_variant_over<value_type_vec>::type value_type;
   value_type value_;
-  value_type default_value_;
 };
 
 }

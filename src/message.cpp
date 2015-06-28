@@ -65,9 +65,7 @@ public:
   }
   result_type operator()(MessageDescription::Ptr message_description)
   {
-    Message message;
-    message.morph(message_description);
-    fields_.push_back(Message::FieldEntry(field_name_, MessageValue::CreateArray(message)));
+    fields_.push_back(Message::FieldEntry(field_name_, MessageValue::Create(MessageArray(message_description))));
   }
 private:
   const std::string field_name_;
@@ -90,7 +88,7 @@ void Message::morph(MessageDescription::Ptr description) {
       visit_field_type(description, visitor, field.value_type());
     }
     else {
-      throw MessageException("MessageValue only supports value fields");
+      throw MessageException("MessageValue only supports value or variable length array fields");
     }
   }
 }
