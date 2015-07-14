@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <string>
 #include <roscpp_message_reflection/message.h>
+#include <roscpp_message_reflection/value_array.h>
 #include <roscpp_message_reflection/message_array.h>
 #include <roscpp_message_reflection/message_exception.h>
 #include <roscpp_message_reflection/util.h>
@@ -17,6 +18,25 @@
 #include <ros/duration.h>
 
 namespace roscpp_message_reflection {
+
+typedef uint8_t RosBool;
+typedef int8_t RosInt8;
+typedef uint8_t RosUint8;
+typedef int16_t RosInt16;
+typedef uint16_t RosUint16;
+typedef int32_t RosInt32;
+typedef uint32_t RosUint32;
+typedef int64_t RosInt64;
+typedef uint64_t RosUint64;
+typedef float RosFloat32;
+typedef double RosFloat64;
+typedef ros::Time RosTime;
+typedef ros::Duration RosDuration;
+typedef std::string RosString;
+
+// Depricated ROS types
+typedef int8_t RosByte;
+typedef uint8_t RosChar;
 
 class Message;
 
@@ -34,9 +54,14 @@ public:
   }
 
   template <typename T>
-  void operator()(std::vector<T>& array)
+  void operator()(ValueArray<T>& array)
   {
-    stream_.next(array);
+    uint32_t new_size;
+    stream_.next(new_size);
+    array.resize(new_size);
+    for(size_t i = 0; i < array.size(); ++i) {
+      stream_.next(array[i]);
+    }
   }
 
   void operator()(MessageArray& array)
@@ -66,9 +91,12 @@ public:
   }
 
   template <typename T>
-  void operator()(const std::vector<T>& array)
+  void operator()(const ValueArray<T>& array)
   {
-    stream_.next(array);
+    stream_.next((uint32_t)array.size());
+    for(size_t i = 0; i < array.size(); ++i) {
+      stream_.next(array[i]);
+    }
   }
 
   void operator()(const MessageArray& array)
@@ -125,6 +153,58 @@ private:
   const InputT& new_value_;
 };
 
+// need to specialize so that char* is converted to a string
+// TODO need to figure out how to combine these better
+template <std::size_t N>
+class assignment_visitor<char[N]>
+  : public boost::static_visitor<>
+{
+public:
+  assignment_visitor(const char* new_value)
+    : new_value_(new_value) {}
+
+  template <typename T>
+  void operator()(T& value)
+  {
+    value = convert<T, std::string>(std::string(new_value_));
+  }
+private:
+  const char* new_value_;
+};
+template <>
+class assignment_visitor<const char*>
+  : public boost::static_visitor<>
+{
+public:
+  assignment_visitor(const char* new_value)
+    : new_value_(new_value) {}
+
+  template <typename T>
+  void operator()(T& value)
+  {
+    value = convert<T, std::string>(std::string(new_value_));
+  }
+private:
+  const char* new_value_;
+};
+template <>
+class assignment_visitor<char*>
+  : public boost::static_visitor<>
+{
+public:
+  assignment_visitor(char* new_value)
+    : new_value_(new_value) {}
+
+  template <typename T>
+  void operator()(T& value)
+  {
+    value = convert<T, std::string>(std::string(new_value_));
+  }
+private:
+  const char* new_value_;
+};
+
+
 template <typename TargetT>
 class as_visitor
   : public boost::static_visitor<TargetT>
@@ -149,7 +229,7 @@ public:
     throw MessageException(ss.str());
   }
   template <typename T>
-  size_t operator()(const std::vector<T>& array) const
+  size_t operator()(const ValueArray<T>& array) const
   {
     return array.size();
   }
@@ -174,14 +254,14 @@ public:
     throw MessageException(ss.str());
   }
   template <typename T>
-  ValueT& operator()(std::vector<T>& value) const
+  ValueT& operator()(ValueArray<T>& value) const
   {
     std::stringstream ss;
     ss << "Cannot get indexed value from mismatched array of type: " << demangle_type<T>()
        << ", looking for array of type: " << demangle_type<ValueT>();
     throw MessageException(ss.str());
   }
-  ValueT& operator()(std::vector<ValueT>& array) const
+  ValueT& operator()(ValueArray<ValueT>& array) const
   {
     return array[index_];
   }
@@ -206,7 +286,7 @@ public:
     throw MessageException(ss.str());
   }
   template <typename T>
-  Message& operator()(std::vector<T>& value) const
+  Message& operator()(ValueArray<T>& value) const
   {
     std::stringstream ss;
     ss << "Cannot get indexed value from mismatched array of type: " << demangle_type<T>()
@@ -236,7 +316,7 @@ public:
     throw MessageException(ss.str());
   }
   template <typename T>
-  void operator()(std::vector<T>& array) const
+  void operator()(ValueArray<T>& array) const
   {
     return array.resize(new_size_);
   }
@@ -249,8 +329,9 @@ private:
   size_t new_size_;
 };
 
-
 class MessageValue {
+private:
+  MessageValue() {}
 public:
 
   template <typename T>
@@ -259,10 +340,36 @@ public:
     value.morph<T>(initial_value);
     return value;
   }
-  template <typename ValueT>
-  static MessageValue CreateArray() {
+
+  static MessageValue Create(const MessageDescription::Ptr& value_type) {
     MessageValue value;
-    value.morph<std::vector<ValueT> >();
+    value.morph<Message>(Message(value_type));
+    return value;
+  }
+
+  template <typename ValueT>
+  static MessageValue CreateVariableLengthArray(size_t size = 0) {
+    MessageValue value;
+    value.morph<ValueArray<ValueT> >(ValueArray<ValueT>(false, size));
+    return value;
+  }
+
+  static MessageValue CreateVariableLengthArray(const MessageDescription::Ptr& value_type, size_t size = 0) {
+    MessageValue value;
+    value.morph<MessageArray>(MessageArray(value_type, false, size));
+    return value;
+  }
+
+  template <typename ValueT>
+  static MessageValue CreateFixedLengthArray(size_t size) {
+    MessageValue value;
+    value.morph<ValueArray<ValueT> >(ValueArray<ValueT>(true, size));
+    return value;
+  }
+
+  static MessageValue CreateFixedLengthArray(const MessageDescription::Ptr& value_type, size_t size) {
+    MessageValue value;
+    value.morph<MessageArray>(MessageArray(value_type, true, size));
     return value;
   }
 
@@ -270,10 +377,41 @@ public:
     assignment_visitor<T> visitor(other);
     boost::apply_visitor(visitor, value_);
   }
-  // need to specialize so that char* is converted to a string
-  void operator=(const char* other) {
-    operator=<std::string>(other);
+
+  // This matches the vector of types below
+  enum ValueType {
+    int8,
+    uint8,
+    int16,
+    uint16,
+    int32,
+    uint32,
+    int64,
+    uint64,
+    float32,
+    float64,
+    string,
+    time,
+    duration,
+    message,
+    ValueTypeCount
+  };
+
+  ValueType valueType() {
+    return (ValueType)(value_.which() % ValueTypeCount);
   }
+
+  bool isArray() {
+    return value_.which() >= ValueTypeCount;
+  }
+
+  bool operator==(const MessageValue& other) const {
+    return value_ == other.value_;
+  }
+  bool operator!=(const MessageValue& other) const {
+    return !operator==(other);
+  }
+
 
   template <typename OtherT> OtherT as() const {
     as_visitor<OtherT> visitor;
@@ -336,19 +474,19 @@ private:
   ros::Time,
   ros::Duration,
   Message,
-  std::vector<int8_t>,
-  std::vector<uint8_t>,
-  std::vector<int16_t>,
-  std::vector<uint16_t>,
-  std::vector<int32_t>,
-  std::vector<uint32_t>,
-  std::vector<int64_t>,
-  std::vector<uint64_t>,
-  std::vector<float>,
-  std::vector<double>,
-  std::vector<std::string>,
-  std::vector<ros::Time>,
-  std::vector<ros::Duration>,
+  ValueArray<int8_t>,
+  ValueArray<uint8_t>,
+  ValueArray<int16_t>,
+  ValueArray<uint16_t>,
+  ValueArray<int32_t>,
+  ValueArray<uint32_t>,
+  ValueArray<int64_t>,
+  ValueArray<uint64_t>,
+  ValueArray<float>,
+  ValueArray<double>,
+  ValueArray<std::string>,
+  ValueArray<ros::Time>,
+  ValueArray<ros::Duration>,
   MessageArray
   > value_type_vec;
   typedef boost::make_variant_over<value_type_vec>::type value_type;

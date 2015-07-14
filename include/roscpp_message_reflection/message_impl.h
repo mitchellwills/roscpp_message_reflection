@@ -14,15 +14,8 @@ struct Message::FieldEntry {
   MessageValue value;
 };
 
-void Message::assertValid() const {
-  if(!description_) {
-    throw MessageException("Message does not have a valid description");
-  }
-}
-
 template<typename Stream>
 void Message::read(Stream& stream) {
-  assertValid();
   BOOST_FOREACH(FieldEntry& entry, fields_) {
     entry.value.deserialize(stream);
   }
@@ -30,7 +23,6 @@ void Message::read(Stream& stream) {
 
 template<typename Stream>
 void Message::write(Stream& stream) const {
-  assertValid();
   BOOST_FOREACH(const FieldEntry& entry, fields_) {
     entry.value.serialize(stream);
   }

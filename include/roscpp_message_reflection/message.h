@@ -11,10 +11,22 @@ class MessageValue;
 
 class Message {
 public:
-  Message();
+  struct FieldEntry;
+
+  typedef std::vector<FieldEntry>::iterator iterator;
+  typedef std::vector<FieldEntry>::const_iterator const_iterator;
+
+  Message(MessageDescription::Ptr description);
   Message(const Message& other);
   Message& operator=(const Message& other);
   ~Message();
+
+  bool operator==(const Message& other) const;
+  bool operator!=(const Message& other) const {
+    return !operator==(other);
+  }
+
+  bool hasField(const std::string& name);
 
   MessageValue& operator[](const std::string& name);
 
@@ -26,10 +38,16 @@ public:
 
   void morph(MessageDescription::Ptr description);
 
-  struct FieldEntry;
+  MessageDescription::Ptr getDescription() const {
+    return description_;
+  }
+
+  const_iterator begin() const { return fields_.begin(); }
+  const_iterator end() const { return fields_.end(); }
+  iterator begin() { return fields_.begin(); }
+  iterator end() { return fields_.end(); }
 
 private:
-  void assertValid() const;
   MessageDescription::Ptr description_;
   std::vector<FieldEntry> fields_;
 };
