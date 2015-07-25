@@ -141,6 +141,20 @@ void Message::morph(MessageDescription::Ptr description) {
 namespace ros {
 namespace serialization {
 
+void PreDeserialize<roscpp_message_reflection::Message>::notify(const PreDeserializeParams<roscpp_message_reflection::Message>& params) {
+  std::string md5      = (*params.connection_header)["md5sum"];
+  std::string datatype = (*params.connection_header)["type"];
+  std::string msg_def  = (*params.connection_header)["message_definition"];
+  std::string latching  = (*params.connection_header)["latching"];
+
+#if !ROS_VERSION_MINIMUM(1, 10, 0) // Hydro and earlier
+  typedef std::map<std::string, std::string> map_t;
+  boost::shared_ptr<map_t> shmap(new map_t(*params.connection_header));
+  params.message->__connection_header = shmap;
+#endif
+  // TODO params.message->morph();
+}
+
 uint32_t Serializer<roscpp_message_reflection::Message>::serializedLength(const roscpp_message_reflection::Message& m) {
   LStream stream;
   m.write(stream);

@@ -52,9 +52,14 @@ public:
   iterator begin() { return fields_.begin(); }
   iterator end() { return fields_.end(); }
 
+#if !ROS_VERSION_MINIMUM(1, 10, 0) // Hydro and earlier
+public:
+  boost::shared_ptr<std::map<std::string, std::string> > __connection_header;
+#endif
 private:
   MessageDescription::Ptr description_;
   std::vector<FieldEntry> fields_;
+
 };
 
 }
@@ -94,6 +99,12 @@ namespace message_traits {
 
 namespace ros {
 namespace serialization {
+
+  template<>
+  struct PreDeserialize<roscpp_message_reflection::Message>
+  {
+    static void notify(const PreDeserializeParams<roscpp_message_reflection::Message>& params);
+  };
 
   template<>
   struct Serializer<roscpp_message_reflection::Message>
