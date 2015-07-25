@@ -147,7 +147,7 @@ void PreDeserialize<roscpp_message_reflection::Message>::notify(const PreDeseria
   std::string msg_def  = (*params.connection_header)["message_definition"];
   std::string latching  = (*params.connection_header)["latching"];
 
-#if !ROS_VERSION_MINIMUM(1, 10, 0) // Hydro and earlier
+#if !ROS_VERSION_MINIMUM(1, 11, 0) // Hydro and earlier
   typedef std::map<std::string, std::string> map_t;
   boost::shared_ptr<map_t> shmap(new map_t(*params.connection_header));
   params.message->__connection_header = shmap;
