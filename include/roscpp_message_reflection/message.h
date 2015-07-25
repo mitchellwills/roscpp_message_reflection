@@ -26,9 +26,14 @@ public:
     return !operator==(other);
   }
 
+  const std::string& getDataType() const;
+  const std::string& getMD5Sum() const;
+  const std::string& getMessageDefinition() const;
+
   bool hasField(const std::string& name);
 
   MessageValue& operator[](const std::string& name);
+  const MessageValue& operator[](const std::string& name) const;
 
   template<typename Stream>
   void read(Stream& stream);
@@ -52,6 +57,39 @@ private:
   std::vector<FieldEntry> fields_;
 };
 
+}
+
+namespace ros {
+namespace message_traits {
+
+  template <> struct IsMessage<roscpp_message_reflection::Message> : TrueType { };
+  template <> struct IsMessage<const roscpp_message_reflection::Message> : TrueType { };
+
+  template<>
+  struct MD5Sum<roscpp_message_reflection::Message>
+  {
+    static const char* value(const roscpp_message_reflection::Message& m) { return m.getMD5Sum().c_str(); }
+
+    // Used statically, a message appears to be of any type
+    static const char* value() { return "*"; }
+  };
+
+  template<>
+  struct DataType<roscpp_message_reflection::Message>
+  {
+    static const char* value(const roscpp_message_reflection::Message& m) { return m.getDataType().c_str(); }
+
+    // Used statically, a message appears to be of any type
+    static const char* value() { return "*"; }
+  };
+
+  template<>
+  struct Definition<roscpp_message_reflection::Message>
+  {
+    static const char* value(const roscpp_message_reflection::Message& m) { return m.getMessageDefinition().c_str(); }
+  };
+
+}
 }
 
 namespace ros {

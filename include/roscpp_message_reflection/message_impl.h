@@ -45,14 +45,6 @@ void Serializer<roscpp_message_reflection::Message>::read(Stream& stream, roscpp
   m.read(stream);
 }
 
-uint32_t Serializer<roscpp_message_reflection::Message>::serializedLength(const roscpp_message_reflection::Message& m) {
-  LStream stream;
-  write(stream, m);
-  return stream.getLength();
-  // TODO make this recursive instead of writing the message out
-  //return m.serializedLength();
-}
-
 }
 }
 

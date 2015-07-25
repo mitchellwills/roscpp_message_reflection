@@ -422,11 +422,24 @@ public:
     return get<Message>()[name];
   }
 
+  const MessageValue& operator[](const std::string& name) const {
+    return get<Message>()[name];
+  }
+
   template <typename T> T& get(){
     return boost::get<T>(value_);
   }
 
-  template <typename T> T& get(size_t index){
+  template <typename T> const T& get() const{
+    return boost::get<T>(value_);
+  }
+
+  template <typename T> T& get(size_t index) {
+    get_array_index_visitor<T> visitor(index);
+    return boost::apply_visitor(visitor, value_);
+  }
+
+  template <typename T> const T& get(size_t index) const {
     get_array_index_visitor<T> visitor(index);
     return boost::apply_visitor(visitor, value_);
   }
@@ -438,6 +451,16 @@ public:
   void resize(size_t size) {
     resize_visitor visitor(size);
     boost::apply_visitor(visitor, value_);
+  }
+
+  template <typename V>
+  typename V::result_type visit(V visitor) {
+    return boost::apply_visitor(visitor, value_);
+  }
+
+  template <typename V>
+  typename V::result_type visit(V visitor) const {
+    return boost::apply_visitor(visitor, value_);
   }
 
   template <typename T>

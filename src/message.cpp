@@ -31,6 +31,19 @@ bool Message::operator==(const Message& other) const {
   return true;
 }
 
+const std::string& Message::getDataType() const {
+  return description_->name;
+}
+
+const std::string& Message::getMD5Sum() const {
+  return description_->md5sum;
+}
+
+const std::string& Message::getMessageDefinition() const {
+  return description_->full_text;
+}
+
+
 bool Message::hasField(const std::string& name) {
   BOOST_FOREACH(FieldEntry& entry, fields_) {
     if(entry.name == name) {
@@ -42,6 +55,14 @@ bool Message::hasField(const std::string& name) {
 
 MessageValue& Message::operator[](const std::string& name) {
   BOOST_FOREACH(FieldEntry& entry, fields_) {
+    if(entry.name == name) {
+      return entry.value;
+    }
+  }
+  throw MessageException("Message: " + description_->name + " does not contain a field: " + name);
+}
+const MessageValue& Message::operator[](const std::string& name) const {
+  BOOST_FOREACH(const FieldEntry& entry, fields_) {
     if(entry.name == name) {
       return entry.value;
     }
@@ -116,3 +137,18 @@ void Message::morph(MessageDescription::Ptr description) {
 }
 
 }
+
+namespace ros {
+namespace serialization {
+
+uint32_t Serializer<roscpp_message_reflection::Message>::serializedLength(const roscpp_message_reflection::Message& m) {
+  LStream stream;
+  m.write(stream);
+  return stream.getLength();
+  // TODO make this recursive instead of writing the message out
+  //return m.serializedLength();
+}
+
+}
+}
+
