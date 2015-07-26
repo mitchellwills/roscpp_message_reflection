@@ -71,28 +71,6 @@ TEST_F(ServiceDescriptionProviderTest, get_std_srvs_Empty_description)
   ASSERT_EQ(0, description->response->fields.size());
 }
 
-TEST_F(ServiceDescriptionProviderTest, get_std_srvs_Trigger_description)
-{
-  ServiceDescription::Ptr description = provider->getServiceDescription("std_srvs/Trigger");
-  ASSERT_TRUE(description);
-  EXPECT_EQ("std_srvs/Trigger", description->name);
-  EXPECT_EQ("937c9679a518e3a18d831e57125ea522", description->md5sum);
-
-  ASSERT_TRUE(description->request);
-  EXPECT_EQ("std_srvs/TriggerRequest", description->request->name);
-  EXPECT_EQ("d41d8cd98f00b204e9800998ecf8427e", description->request->md5sum);
-  EXPECT_GT(description->request->full_text.size(), 0);
-  ASSERT_EQ(0, description->request->fields.size());
-
-  ASSERT_TRUE(description->response);
-  EXPECT_EQ("std_srvs/TriggerResponse", description->response->name);
-  EXPECT_EQ("937c9679a518e3a18d831e57125ea522", description->response->md5sum);
-  EXPECT_GT(description->response->full_text.size(), 0);
-  ASSERT_EQ(2, description->response->fields.size());
-  EXPECT_VALUE_FIELD("success", "bool", description->response->fields[0]);
-  EXPECT_VALUE_FIELD("message", "string", description->response->fields[1]);
-}
-
 TEST_F(ServiceDescriptionProviderTest, get_std_srvs_description)
 {
   ServiceDescription::Ptr description = provider->getServiceDescription("sensor_msgs/SetCameraInfo");
