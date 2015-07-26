@@ -64,7 +64,7 @@ def fufill_service_info_request(req):
     return GetServiceInfoResponse(service=info, message_infos=msgs.values())
 
 if __name__=="__main__":
-    rospy.init_node("message_info_node")
+    rospy.init_node("message_description_server")
 
     msg_service = rospy.Service("get_message_info", GetMessageInfo, fufill_message_info_request)
     srv_service = rospy.Service("get_service_info", GetServiceInfo, fufill_service_info_request)

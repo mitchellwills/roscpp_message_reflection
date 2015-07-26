@@ -35,6 +35,40 @@ private:
   MessageDescription::Ptr description_;
 };
 
+class ServiceClient {
+public:
+  ServiceClient() {}
+  ServiceClient(ros::ServiceClient client, ServiceDescription::Ptr description)
+    : client_(client), description_(description) {}
+
+  operator bool() const {
+    return client_;
+  }
+
+  Message createRequestMessage() {
+    return Message(description_->request);
+  }
+
+  Message createResponseMessage() {
+    return Message(description_->response);
+  }
+
+  bool call(const Message& req, Message* res) {
+    if(req.getDescription() != description_->request) {
+      ROS_WARN("Message request description does not match service");
+      return false;
+    }
+    if(res->getDescription() != description_->response) {
+      ROS_WARN("Message response description does not match service");
+      return false;
+    }
+    return client_.call(req, *res, description_->md5sum);
+  }
+private:
+  ros::ServiceClient client_;
+  ServiceDescription::Ptr description_;
+};
+
 class Subscriber {
 public:
   Subscriber() {}
@@ -93,6 +127,17 @@ public:
             new ros::SubscriptionCallbackHelperT<const boost::shared_ptr<Message const>&>(
 	            callback, MessageCreator(description)));
     return Subscriber(nh_.subscribe(options), description);
+  }
+
+  ServiceClient serviceClient(const std::string& service, const std::string& type) {
+    ServiceDescription::Ptr description = description_provider_->getServiceDescription(type);
+    if(!description)
+      return ServiceClient();
+
+    ros::ServiceClientOptions options;
+    options.service = service;
+    options.md5sum = description->md5sum;
+    return ServiceClient(nh_.serviceClient(options), description);
   }
 
 private:
