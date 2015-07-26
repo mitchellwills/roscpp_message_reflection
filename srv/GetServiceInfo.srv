@@ -1,0 +1,4 @@
+string type
+---
+roscpp_message_reflection/ServiceInfo service
+roscpp_message_reflection/MessageInfo[] message_infos

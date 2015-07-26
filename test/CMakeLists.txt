@@ -6,6 +6,9 @@ if(GTEST_FOUND)
   add_executable(message_description_test EXCLUDE_FROM_ALL message_description_test.cpp)
   target_link_libraries(message_description_test ${PROJECT_NAME} ${catkin_LIBRARIES} ${GTEST_LIBRARIES})
 
+  add_executable(service_description_test EXCLUDE_FROM_ALL service_description_test.cpp)
+  target_link_libraries(service_description_test ${PROJECT_NAME} ${catkin_LIBRARIES} ${GTEST_LIBRARIES})
+
   #set_target_properties(message_description_test PROPERTIES COMPILE_FLAGS "-fprofile-arcs -ftest-coverage")
   #target_link_libraries(message_description_test gcov)
 
@@ -25,6 +28,7 @@ if(GTEST_FOUND)
 
   if(TARGET tests)
     add_dependencies(tests
+      service_description_test
       message_description_test
       message_serialization_test
       message_value_test

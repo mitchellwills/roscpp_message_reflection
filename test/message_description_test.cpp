@@ -1,41 +1,13 @@
 #include <gtest/gtest.h>
 #include <ros/ros.h>
 #include <boost/scoped_ptr.hpp>
+#include "test_utils.h"
 #include <roscpp_message_reflection/message_description_provider.h>
 
 // NOTE Since comments in message full text varies between distros (even with same hash)
 //      we just check that the full text is not empty
 
 using namespace roscpp_message_reflection;
-
-#define EXPECT_VALUE_FIELD(expected_name, expected_type, field)	\
-  EXPECT_EQ(expected_name, field.name());			\
-  EXPECT_EQ(expected_type, field.full_type());			\
-  EXPECT_EQ(expected_type, field.value_type());			\
-  EXPECT_EQ(FieldDescription::Value, field.type())
-
-#define EXPECT_VARIABLE_LENGTH_ARRAY_FIELD(expected_name, expected_value_type, field) \
-  EXPECT_EQ(expected_name, field.name());				\
-  {									\
-    std::stringstream expected_full_type_ss;				\
-    expected_full_type_ss << expected_value_type;			\
-    expected_full_type_ss << "[]";					\
-    EXPECT_EQ(expected_full_type_ss.str(), field.full_type());		\
-  }									\
-  EXPECT_EQ(expected_value_type, field.value_type());			\
-  EXPECT_EQ(FieldDescription::VariableLengthArray, field.type());	\
-
-#define EXPECT_FIXED_LENGTH_ARRAY_FIELD(expected_name, expected_value_type, expected_length, field) \
-  EXPECT_EQ(expected_name, field.name());				\
-  {									\
-    std::stringstream expected_full_type_ss;				\
-    expected_full_type_ss << expected_value_type;			\
-    expected_full_type_ss << "[" << expected_length << "]";		\
-    EXPECT_EQ(expected_full_type_ss.str(), field.full_type());		\
-  }									\
-  EXPECT_EQ(expected_value_type, field.value_type());			\
-  EXPECT_EQ(FieldDescription::FixedLengthArray, field.type());		\
-  EXPECT_EQ(expected_length, field.array_length())
 
 TEST(MessageDescription, construct_value_field)
 {
@@ -84,7 +56,7 @@ protected:
 
 TEST_F(MessageDescriptionProviderTest, get_std_msgs_String_description)
 {
-  MessageDescription::Ptr description = provider->getDescription("std_msgs/String");
+  MessageDescription::Ptr description = provider->getMessageDescription("std_msgs/String");
   ASSERT_TRUE(description);
   EXPECT_EQ("std_msgs/String", description->name);
   EXPECT_EQ("992ce8a1687cec8c8bd883ec73ca41d1", description->md5sum);
@@ -96,7 +68,7 @@ TEST_F(MessageDescriptionProviderTest, get_std_msgs_String_description)
 
 TEST_F(MessageDescriptionProviderTest, get_geometry_msgs_Vector3_description)
 {
-  MessageDescription::Ptr description = provider->getDescription("geometry_msgs/Vector3");
+  MessageDescription::Ptr description = provider->getMessageDescription("geometry_msgs/Vector3");
   ASSERT_TRUE(description);
   EXPECT_EQ("geometry_msgs/Vector3", description->name);
   EXPECT_EQ("4a842b65f413084dc2b10fb484ea7f17", description->md5sum);
@@ -111,7 +83,7 @@ TEST_F(MessageDescriptionProviderTest, get_geometry_msgs_Vector3_description)
 // Tests expansion of type without package and fixed length array
 TEST_F(MessageDescriptionProviderTest, get_geometry_msgs_PoseWithCovariance_description)
 {
-  MessageDescription::Ptr description = provider->getDescription("geometry_msgs/PoseWithCovariance");
+  MessageDescription::Ptr description = provider->getMessageDescription("geometry_msgs/PoseWithCovariance");
   ASSERT_TRUE(description);
   EXPECT_EQ("geometry_msgs/PoseWithCovariance", description->name);
   EXPECT_EQ("c23e848cf1b7533a8d7c259073a97e6f", description->md5sum);
@@ -125,7 +97,7 @@ TEST_F(MessageDescriptionProviderTest, get_geometry_msgs_PoseWithCovariance_desc
 // Tests expansion of type without package recursivly
 TEST_F(MessageDescriptionProviderTest, get_geometry_msgs_PoseWithCovarianceStamped_description)
 {
-  MessageDescription::Ptr description = provider->getDescription("geometry_msgs/PoseWithCovarianceStamped");
+  MessageDescription::Ptr description = provider->getMessageDescription("geometry_msgs/PoseWithCovarianceStamped");
   ASSERT_TRUE(description);
   EXPECT_EQ("geometry_msgs/PoseWithCovarianceStamped", description->name);
   EXPECT_EQ("953b798c0f514ff060a53a3498ce6246", description->md5sum);
@@ -140,7 +112,7 @@ TEST_F(MessageDescriptionProviderTest, get_geometry_msgs_PoseWithCovarianceStamp
 // Tests variable length array
 TEST_F(MessageDescriptionProviderTest, get_geometry_msgs_PoseArray_description)
 {
-  MessageDescription::Ptr description = provider->getDescription("geometry_msgs/PoseArray");
+  MessageDescription::Ptr description = provider->getMessageDescription("geometry_msgs/PoseArray");
   ASSERT_TRUE(description);
   EXPECT_EQ("geometry_msgs/PoseArray", description->name);
   EXPECT_EQ("916c28c5764443f268b296bb671b9d97", description->md5sum);

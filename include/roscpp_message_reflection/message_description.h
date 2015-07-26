@@ -79,7 +79,6 @@ private:
   array_length_t array_length_;
 };
 
-class MessageDescriptionProvider;
 struct MessageDescription {
   typedef boost::shared_ptr<MessageDescription> Ptr;
 

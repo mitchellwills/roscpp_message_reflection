@@ -56,7 +56,7 @@ public:
     : nh_(nh), description_provider_(MessageDescriptionProvider::Create(nh_)) {}
 
   Publisher advertise(const std::string& topic, const std::string& type) {
-    MessageDescription::Ptr description = description_provider_->getDescription(type);
+    MessageDescription::Ptr description = description_provider_->getMessageDescription(type);
     if(!description)
       return Publisher();
 
@@ -81,7 +81,7 @@ public:
 
   Subscriber subscribe(const std::string& topic, const std::string& type,
 		       const boost::function< void(const boost::shared_ptr<const Message>&)> callback) {
-    MessageDescription::Ptr description = description_provider_->getDescription(type);
+    MessageDescription::Ptr description = description_provider_->getMessageDescription(type);
     if(!description)
       return Subscriber();
 

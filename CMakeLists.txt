@@ -25,6 +25,7 @@ find_package(catkin REQUIRED COMPONENTS
 
 add_message_files(
    FILES
+   ServiceInfo.msg
    MessageInfo.msg
    MessageFieldInfo.msg
 )
@@ -32,6 +33,7 @@ add_message_files(
 add_service_files(
    FILES
    GetMessageInfo.srv
+   GetServiceInfo.srv
 )
 
 generate_messages(

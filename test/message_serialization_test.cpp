@@ -50,14 +50,14 @@ protected:
     serialized_message = ros::serialization::serializeMessage(input);	\
     ros::serialization::IStream stream = createIStream();		\
 									\
-    Message message(description_provider->getDescription("std_msgs/"#message_name)); \
+    Message message(description_provider->getMessageDescription("std_msgs/"#message_name)); \
     ros::serialization::deserializeMessage(serialized_message, message); \
 									\
     EXPECT_EQ(input.data, message["data"].as<native_type>());		\
   }									\
 									\
   TEST_F(MessageSerializationTest, serialize_std_msgs_##message_name) {	\
-    Message message(description_provider->getDescription("std_msgs/"#message_name)); \
+    Message message(description_provider->getMessageDescription("std_msgs/"#message_name)); \
     message["data"] = test_data;					\
 									\
     serialized_message = ros::serialization::serializeMessage(message);	\
@@ -92,7 +92,7 @@ TEST_F(MessageSerializationTest, deserialize_geometry_msgs_Vector3) {
 
   serialized_message = ros::serialization::serializeMessage(input);
 
-  Message message(description_provider->getDescription("geometry_msgs/Vector3"));
+  Message message(description_provider->getMessageDescription("geometry_msgs/Vector3"));
   ros::serialization::deserializeMessage(serialized_message, message);
 
   EXPECT_EQ(input.x, message["x"].as<double>());
@@ -103,7 +103,7 @@ TEST_F(MessageSerializationTest, deserialize_geometry_msgs_Vector3) {
 
 
 TEST_F(MessageSerializationTest, serialize_geometry_msgs_Vector3) {
-  Message message(description_provider->getDescription("geometry_msgs/Vector3"));
+  Message message(description_provider->getMessageDescription("geometry_msgs/Vector3"));
   message["x"] = 1.5;
   message["y"] = 2.0;
   message["z"] = 3.3;
@@ -130,7 +130,7 @@ TEST_F(MessageSerializationTest, deserialize_geometry_msgs_Twist) {
 
   serialized_message = ros::serialization::serializeMessage(input);
 
-  Message message(description_provider->getDescription("geometry_msgs/Twist"));
+  Message message(description_provider->getMessageDescription("geometry_msgs/Twist"));
   ros::serialization::deserializeMessage(serialized_message, message);
 
   EXPECT_EQ(input.linear.x, message["linear"]["x"].as<double>());
@@ -144,7 +144,7 @@ TEST_F(MessageSerializationTest, deserialize_geometry_msgs_Twist) {
 
 
 TEST_F(MessageSerializationTest, serialize_geometry_msgs_Twist) {
-  Message message(description_provider->getDescription("geometry_msgs/Twist"));
+  Message message(description_provider->getMessageDescription("geometry_msgs/Twist"));
   message["linear"]["x"] = 1.5;
   message["linear"]["y"] = 2.0;
   message["linear"]["z"] = 3.3;
@@ -179,7 +179,7 @@ TEST_F(MessageSerializationTest, deserialize_geometry_msgs_PoseArray) {
 
   serialized_message = ros::serialization::serializeMessage(input);
 
-  Message message(description_provider->getDescription("geometry_msgs/PoseArray"));
+  Message message(description_provider->getMessageDescription("geometry_msgs/PoseArray"));
   ros::serialization::deserializeMessage(serialized_message, message);
 
   ASSERT_EQ(input.poses.size(), message["poses"].size());
@@ -194,11 +194,11 @@ TEST_F(MessageSerializationTest, deserialize_geometry_msgs_PoseArray) {
 
 
 TEST_F(MessageSerializationTest, serialize_geometry_msgs_PoseArray) {
-  Message message(description_provider->getDescription("geometry_msgs/PoseArray"));
+  Message message(description_provider->getMessageDescription("geometry_msgs/PoseArray"));
 
   message["poses"].resize(10);
   for(int i = 0; i < 10; ++i) {
-    Message pose(description_provider->getDescription("geometry_msgs/Pose"));
+    Message pose(description_provider->getMessageDescription("geometry_msgs/Pose"));
     pose["position"]["x"] = i*2.2;
     pose["position"]["y"] = i*1;
     pose["position"]["z"] = i*2;
@@ -230,7 +230,7 @@ TEST_F(MessageSerializationTest, deserialize_sensor_msgs_CompressedImage) {
 
   serialized_message = ros::serialization::serializeMessage(input);
 
-  Message message(description_provider->getDescription("sensor_msgs/CompressedImage"));
+  Message message(description_provider->getMessageDescription("sensor_msgs/CompressedImage"));
   ros::serialization::deserializeMessage(serialized_message, message);
 
   EXPECT_EQ(input.format, message["format"].as<std::string>());
@@ -243,7 +243,7 @@ TEST_F(MessageSerializationTest, deserialize_sensor_msgs_CompressedImage) {
 
 
 TEST_F(MessageSerializationTest, serialize_sensor_msgs_CompressedImage) {
-  Message message(description_provider->getDescription("sensor_msgs/CompressedImage"));
+  Message message(description_provider->getMessageDescription("sensor_msgs/CompressedImage"));
   message["format"] = "a test";
   message["data"].resize(10);
   for(int i = 0; i < 10; ++i) {
