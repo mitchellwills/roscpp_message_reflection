@@ -84,6 +84,21 @@ private:
   MessageDescription::Ptr description_;
 };
 
+class ServiceServer {
+public:
+  ServiceServer() {}
+  ServiceServer(ros::ServiceServer server, ServiceDescription::Ptr description)
+    : server_(server), description_(description) {}
+
+  operator bool() const {
+    return server_;
+  }
+
+private:
+  ros::ServiceServer server_;
+  ServiceDescription::Ptr description_;
+};
+
 class NodeHandle {
 public:
   NodeHandle(ros::NodeHandle& nh)
@@ -105,12 +120,12 @@ public:
 
   class MessageCreator {
   public:
-    MessageCreator(MessageDescription::Ptr& description) : description_(description) {}
+    MessageCreator(const MessageDescription::Ptr& description) : description_(description) {}
     boost::shared_ptr<Message> operator()() {
       return boost::make_shared<Message>(description_);
     }
   private:
-    MessageDescription::Ptr description_;
+    const MessageDescription::Ptr description_;
   };
 
   Subscriber subscribe(const std::string& topic, const std::string& type,
@@ -127,6 +142,24 @@ public:
             new ros::SubscriptionCallbackHelperT<const boost::shared_ptr<Message const>&>(
 	            callback, MessageCreator(description)));
     return Subscriber(nh_.subscribe(options), description);
+  }
+
+  ServiceServer advertiseService(const std::string& service, const std::string& type,
+				 const boost::function<bool(const Message&, Message&)> callback) {
+    ServiceDescription::Ptr description = description_provider_->getServiceDescription(type);
+    if(!description)
+      return ServiceServer();
+
+    ros::AdvertiseServiceOptions options;
+    options.service = service;
+    options.datatype = type;
+    options.req_datatype = description->request->name;
+    options.res_datatype = description->response->name;
+    options.md5sum = description->md5sum;
+    options.helper = ros::ServiceCallbackHelperPtr(
+            new ros::ServiceCallbackHelperT<ros::ServiceSpec<Message, Message> >(
+	    callback, MessageCreator(description->request), MessageCreator(description->response)));
+    return ServiceServer(nh_.advertiseService(options), description);
   }
 
   ServiceClient serviceClient(const std::string& service, const std::string& type) {
