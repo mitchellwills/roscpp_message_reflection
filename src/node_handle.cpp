@@ -67,6 +67,15 @@ Message ServiceClient::createResponseMessage() {
   return Message(description_->response);
 }
 
+MessageDescription::Ptr ServiceClient::getRequestType() {
+  return description_->request;
+}
+
+MessageDescription::Ptr ServiceClient::getResponseType() {
+  return description_->response;
+}
+
+
 bool ServiceClient::call(const Message& req, Message& res) {
   if(req.getDescription() != description_->request) {
     ROS_WARN("Message request description does not match service");

@@ -56,6 +56,8 @@ public:
 
   Message createRequestMessage();
   Message createResponseMessage();
+  MessageDescription::Ptr getRequestType();
+  MessageDescription::Ptr getResponseType();
 
   bool call(const Message& req, Message& res);
 
