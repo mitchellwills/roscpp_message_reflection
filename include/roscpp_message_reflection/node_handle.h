@@ -23,8 +23,20 @@ public:
     return Message(description_);
   }
 
-  void publish(Message msg) {
+  MessageDescription::Ptr getMessageType() {
+    return description_;
+  }
+
+  void publish(Message& msg) {
     if(msg.getDescription() != description_) {
+      ROS_WARN("Message description does not match publisher");
+      return;
+    }
+    pub_.publish(msg);
+  }
+
+  void publish(const boost::shared_ptr<const Message>& msg) {
+    if(msg->getDescription() != description_) {
       ROS_WARN("Message description does not match publisher");
       return;
     }
@@ -53,16 +65,16 @@ public:
     return Message(description_->response);
   }
 
-  bool call(const Message& req, Message* res) {
+  bool call(const Message& req, Message& res) {
     if(req.getDescription() != description_->request) {
       ROS_WARN("Message request description does not match service");
       return false;
     }
-    if(res->getDescription() != description_->response) {
+    if(res.getDescription() != description_->response) {
       ROS_WARN("Message response description does not match service");
       return false;
     }
-    return client_.call(req, *res, description_->md5sum);
+    return client_.call(req, res, description_->md5sum);
   }
 private:
   ros::ServiceClient client_;

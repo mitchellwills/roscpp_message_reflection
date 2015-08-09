@@ -3,6 +3,7 @@
 
 #include <string>
 #include <map>
+#include <boost/shared_ptr.hpp>
 #include <roscpp_message_reflection/message_description.h>
 
 namespace roscpp_message_reflection {
@@ -11,6 +12,9 @@ class MessageValue;
 
 class Message {
 public:
+  typedef boost::shared_ptr<Message> Ptr;
+  typedef boost::shared_ptr<const Message> ConstPtr;
+
   struct FieldEntry;
 
   typedef std::vector<FieldEntry>::iterator iterator;

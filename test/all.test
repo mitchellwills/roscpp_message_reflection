@@ -3,6 +3,7 @@
   <test test-name="message_description" pkg="roscpp_message_reflection" type="message_description_test" />
   <test test-name="service_description" pkg="roscpp_message_reflection" type="service_description_test" />
   <test test-name="message_serialization" pkg="roscpp_message_reflection" type="message_serialization_test" />
+  <test test-name="node_handle" pkg="roscpp_message_reflection" type="node_handle_test" />
   <test test-name="message_value" pkg="roscpp_message_reflection" type="message_value_test" />
   <test test-name="message" pkg="roscpp_message_reflection" type="message_test" />
 </launch>

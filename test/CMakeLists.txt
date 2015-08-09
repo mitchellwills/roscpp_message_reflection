@@ -15,6 +15,9 @@ if(GTEST_FOUND)
   add_executable(message_serialization_test EXCLUDE_FROM_ALL message_serialization_test.cpp)
   target_link_libraries(message_serialization_test ${PROJECT_NAME} ${catkin_LIBRARIES} ${GTEST_LIBRARIES})
 
+  add_executable(node_handle_test EXCLUDE_FROM_ALL node_handle_test.cpp)
+  target_link_libraries(node_handle_test ${PROJECT_NAME} ${catkin_LIBRARIES} ${GTEST_LIBRARIES})
+
   add_executable(message_test EXCLUDE_FROM_ALL message_test.cpp)
   target_link_libraries(message_test ${PROJECT_NAME} ${catkin_LIBRARIES} ${GTEST_LIBRARIES})
 
@@ -33,6 +36,7 @@ if(GTEST_FOUND)
       message_serialization_test
       message_value_test
       message_test
+      node_handle_test
       )
   endif()
 
