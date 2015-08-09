@@ -62,6 +62,7 @@ add_library(roscpp_message_reflection
   src/message.cpp
   src/message_value.cpp
   src/message_description_provider.cpp
+  src/node_handle.cpp
 )
 target_link_libraries(roscpp_message_reflection
   ${catkin_LIBRARIES}
