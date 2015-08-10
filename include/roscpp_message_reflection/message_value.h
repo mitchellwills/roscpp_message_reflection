@@ -12,6 +12,7 @@
 #include <boost/numeric/conversion/cast.hpp>
 #include <boost/icl/type_traits/is_numeric.hpp>
 #include <boost/mpl/vector.hpp>
+#include <boost/mpl/copy.hpp>
 #include <boost/type_traits.hpp>
 #include <boost/foreach.hpp>
 #include <ros/time.h>
@@ -496,7 +497,10 @@ private:
   std::string,
   ros::Time,
   ros::Duration,
-  Message,
+  Message
+  > value_type_vec1;
+
+  typedef boost::mpl::vector<
   ValueArray<int8_t>,
   ValueArray<uint8_t>,
   ValueArray<int16_t>,
@@ -511,7 +515,15 @@ private:
   ValueArray<ros::Time>,
   ValueArray<ros::Duration>,
   MessageArray
-  > value_type_vec;
+  > value_type_vec2;
+
+  /**
+   * Concatenate value_type_vec1 and value_type_vec2 -> value_type_vec
+   * This is used to get around boot restriction of max 20 template arguments
+   * for a vector without using compiler definitions
+   */
+  typedef boost::mpl::copy<value_type_vec2::type, boost::mpl::back_inserter<value_type_vec1> >::type value_type_vec;
+
   typedef boost::make_variant_over<value_type_vec>::type value_type;
   value_type value_;
 };

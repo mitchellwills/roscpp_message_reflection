@@ -50,9 +50,6 @@ catkin_package(
 ## Build ##
 ###########
 
-# TODO either need to figure out a better way to do this or pass it down to dependants so it is inherited
-add_definitions(-DBOOST_MPL_CFG_NO_PREPROCESSED_HEADERS -DBOOST_MPL_LIMIT_VECTOR_SIZE=30)
-
 include_directories(include)
 include_directories(
   ${catkin_INCLUDE_DIRS}
