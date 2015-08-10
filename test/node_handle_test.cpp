@@ -4,7 +4,7 @@
 #include <roscpp_message_reflection/message_impl.h>
 #include <roscpp_message_reflection/node_handle.h>
 #include <geometry_msgs/Vector3.h>
-#include <std_srvs/Trigger.h>
+#include <roscpp_tutorials/TwoInts.h>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/condition_variable.hpp>
 
@@ -126,39 +126,41 @@ TEST_F(NodeHandleTest, subscribe) {
 }
 
 
-bool serviceClientTestSuccessCallback(std_srvs::Trigger::Request& req,
-			       std_srvs::Trigger::Response& res) {
-  res.message = "TEST MESSAGE!";
-  res.success = false;
+bool serviceClientTestSuccessCallback(roscpp_tutorials::TwoInts::Request& req,
+				      roscpp_tutorials::TwoInts::Response& res) {
+  res.sum = req.a + req.b;
   return true;
 }
 
 TEST_F(NodeHandleTest, serviceClientSuccess) {
-  ServiceClient client = nh.serviceClient(test_topic(), "std_srvs/Trigger");
+  ServiceClient client = nh.serviceClient(test_topic(), "roscpp_tutorials/TwoInts");
 
   ros::ServiceServer server = ros_nh.advertiseService(test_topic(), serviceClientTestSuccessCallback);
 
   Message req = client.createRequestMessage();
   Message res = client.createResponseMessage();
+  req["a"] = 3;
+  req["b"] = 8;
   bool result = client.call(req, res);
 
   EXPECT_TRUE(result);
-  EXPECT_EQ("TEST MESSAGE!", res["message"].as<std::string>());
-  EXPECT_EQ(false, res["success"].as<bool>());
+  EXPECT_EQ(11, res["sum"].as<int>());
 }
 
-bool serviceClientTestFailureCallback(std_srvs::Trigger::Request& req,
-			       std_srvs::Trigger::Response& res) {
+bool serviceClientTestFailureCallback(roscpp_tutorials::TwoInts::Request& req,
+				      roscpp_tutorials::TwoInts::Response& res) {
   return false;
 }
 
 TEST_F(NodeHandleTest, serviceClientFailure) {
-  ServiceClient client = nh.serviceClient(test_topic(), "std_srvs/Trigger");
+  ServiceClient client = nh.serviceClient(test_topic(), "roscpp_tutorials/TwoInts");
 
   ros::ServiceServer server = ros_nh.advertiseService(test_topic(), serviceClientTestFailureCallback);
 
   Message req = client.createRequestMessage();
   Message res = client.createResponseMessage();
+  req["a"] = 3;
+  req["b"] = 8;
   bool result = client.call(req, res);
 
   EXPECT_FALSE(result);
@@ -166,23 +168,23 @@ TEST_F(NodeHandleTest, serviceClientFailure) {
 
 bool serviceServerTestSuccessCallback(const Message& req,
 				      Message& res) {
-  res["message"] = "TEST MESSAGE!";
-  res["success"] = false;
+  res["sum"] = req["a"].as<RosInt64>() + req["b"].as<RosInt64>();
   return true;
 }
 
 TEST_F(NodeHandleTest, serviceServerSuccess) {
-  ros::ServiceClient client = ros_nh.serviceClient<std_srvs::Trigger>(test_topic());
+  ros::ServiceClient client = ros_nh.serviceClient<roscpp_tutorials::TwoInts>(test_topic());
 
-  ServiceServer server = nh.advertiseService(test_topic(), "std_srvs/Trigger", serviceServerTestSuccessCallback);
+  ServiceServer server = nh.advertiseService(test_topic(), "roscpp_tutorials/TwoInts", serviceServerTestSuccessCallback);
 
-  std_srvs::Trigger::Request req;
-  std_srvs::Trigger::Response res;
+  roscpp_tutorials::TwoInts::Request req;
+  roscpp_tutorials::TwoInts::Response res;
+  req.a = 5;
+  req.b = 10;
   bool result = client.call(req, res);
 
   EXPECT_TRUE(result);
-  EXPECT_EQ("TEST MESSAGE!", res.message);
-  EXPECT_EQ(false, res.success);
+  EXPECT_EQ(15, res.sum);
 }
 
 bool serviceServerTestFailureCallback(const Message& req,
@@ -191,12 +193,14 @@ bool serviceServerTestFailureCallback(const Message& req,
 }
 
 TEST_F(NodeHandleTest, serviceServerFailure) {
-  ros::ServiceClient client = ros_nh.serviceClient<std_srvs::Trigger>(test_topic());
+  ros::ServiceClient client = ros_nh.serviceClient<roscpp_tutorials::TwoInts>(test_topic());
 
-  ServiceServer server = nh.advertiseService(test_topic(), "std_srvs/Trigger", serviceServerTestFailureCallback);
+  ServiceServer server = nh.advertiseService(test_topic(), "roscpp_tutorials/TwoInts", serviceServerTestFailureCallback);
 
-  std_srvs::Trigger::Request req;
-  std_srvs::Trigger::Response res;
+  roscpp_tutorials::TwoInts::Request req;
+  roscpp_tutorials::TwoInts::Response res;
+  req.a = 5;
+  req.b = 10;
   bool result = client.call(req, res);
 
   EXPECT_FALSE(result);
